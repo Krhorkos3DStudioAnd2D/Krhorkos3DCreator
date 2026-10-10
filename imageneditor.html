@@ -5,703 +5,395 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editor de Imágenes y Atlas de Texturas</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            background-color: #1a1a1a;
-            color: #ffffff;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-        .card-container {
-            background-color: #2b2b2b;
-            border: 1px solid #3d3d3d;
-        }
-        .btn-primary {
-            background-color: #e67e22;
-            border: 1px solid #b35f17;
-            color: #ffffff;
-            transition: background-color 0.2s, transform 0.1s;
-        }
-        .btn-primary:hover {
-            background-color: #d35400;
-        }
-        .btn-secondary {
-            background-color: #3a3a3a;
-            border: 1px solid #4a4a4a;
-            color: #ffffff;
-            transition: background-color 0.2s;
-        }
-        .btn-secondary:hover {
-            background-color: #4a4a4a;
-        }
-        .tooltip-container {
-            position: relative;
-        }
-        .tooltip-text {
-            visibility: hidden;
-            width: 240px;
-            background-color: #1a1a1a;
-            color: #fff;
-            text-align: left;
-            border-radius: 6px;
-            padding: 8px 12px;
-            position: absolute;
-            z-index: 50;
-            bottom: 110%;
-            left: 50%;
-            transform: translateX(-50%);
-            opacity: 0;
-            transition: opacity 0.3s;
-            border: 1px solid #4a4a4a;
-            font-size: 0.8rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            pointer-events: none;
-        }
-        .tooltip-container:hover .tooltip-text {
-            visibility: visible;
-            opacity: 1;
-        }
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1a1a1a;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #3a3a3a;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #4a4a4a;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #1e1e1e; color: #f3f4f6; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #2b2b2b; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between selection:bg-orange-500 selection:text-white">
-
-    <header class="w-full border-b border-zinc-800 bg-[#2b2b2b] px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-md">
-        <div>
-            <h1 class="text-xl font-bold text-white tracking-wide">Atlas de Texturas & Editor</h1>
-            <p class="text-xs text-zinc-400">Pega imágenes (Ctrl+V) para organizar tu grilla de texturas en tiempo real</p>
+<body class="min-h-screen flex flex-col">
+    <header class="bg-[#2b2b2b] border-b border-[#3f3f46] px-6 py-4 flex items-center justify-between shadow-md">
+        <div class="flex items-center space-x-3">
+            <div class="bg-indigo-600 p-2 rounded-lg text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-5zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-5z" />
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold text-white">Editor de Imágenes y Atlas de Texturas</h1>
+                <p class="text-xs text-zinc-400">Diseña, organiza y exporta tus atlas de sprites fácilmente</p>
+            </div>
         </div>
-        <div class="flex items-center gap-3">
-            <button id="clearBtn" class="btn-secondary px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                Limpiar Todo
-            </button>
-            <button id="exportModalBtn" class="btn-primary px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                Exportar Imagen
-            </button>
+        <div class="flex items-center space-x-3">
+            <button onclick="clearAllTextures()" class="bg-zinc-700 hover:bg-zinc-600 text-xs px-3 py-2 rounded-lg font-medium transition text-zinc-200">Limpiar Todo</button>
         </div>
     </header>
 
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <main class="flex-1 flex flex-col lg:flex-row p-6 gap-6 max-w-[1600px] w-full mx-auto">
         
-        <aside class="lg:col-span-1 flex flex-col gap-5">
-            <div class="card-container rounded-xl p-5 shadow-sm">
-                <h2 class="text-sm font-bold text-white uppercase tracking-wider mb-3">Configuración de Grilla</h2>
-                
-                <div class="space-y-4">
+        <aside class="w-full lg:w-80 flex flex-col gap-6">
+            <div class="bg-[#2b2b2b] border border-[#3f3f46] rounded-xl p-5 shadow-lg flex flex-col gap-4">
+                <h2 class="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Configuración de Grilla</h2>
+                <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs text-zinc-300 mb-1">Tamaño de Celda (píxeles)</label>
-                        <select id="cellSizeSelect" class="w-full bg-[#1a1a1a] border border-zinc-700 text-white text-sm rounded-lg p-2.5 focus:outline-none focus:border-orange-500">
-                            <option value="8">8 × 8 px</option>
-                            <option value="16">16 × 16 px</option>
-                            <option value="32">32 × 32 px</option>
-                            <option value="64" selected>64 × 64 px (Estándar)</option>
-                            <option value="128">128 × 128 px</option>
-                        </select>
+                        <label class="text-xs text-zinc-400 block mb-1">Columnas</label>
+                        <input type="number" id="gridCols" min="1" max="16" value="4" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                     </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs text-zinc-300 mb-1">Columnas</label>
-                            <input type="number" id="gridCols" min="1" max="16" value="4" class="w-full bg-[#1a1a1a] border border-zinc-700 text-white text-sm rounded-lg p-2.5 focus:outline-none focus:border-orange-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-zinc-300 mb-1">Filas</label>
-                            <input type="number" id="gridRows" min="1" max="16" value="1" class="w-full bg-[#1a1a1a] border border-zinc-700 text-white text-sm rounded-lg p-2.5 focus:outline-none focus:border-orange-500">
-                        </div>
+                    <div>
+                        <label class="text-xs text-zinc-400 block mb-1">Filas</label>
+                        <input type="number" id="gridRows" min="1" max="16" value="4" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                     </div>
-
-                    <div class="flex items-center justify-between pt-2 border-t border-zinc-800">
-                        <span class="text-xs text-zinc-300">Mostrar Líneas de Grilla</span>
-                        <input type="checkbox" id="toggleGridLines" checked class="w-4 h-4 accent-orange-500 rounded cursor-pointer">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-xs text-zinc-400 block mb-1">Ancho Celda (px)</label>
+                        <input type="number" id="cellWidth" min="16" max="1024" value="128" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="text-xs text-zinc-400 block mb-1">Alto Celda (px)</label>
+                        <input type="number" id="cellHeight" min="16" max="1024" value="128" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
             </div>
 
-            <div class="card-container rounded-xl p-5 shadow-sm flex-1 flex flex-col">
-                <div class="flex items-center justify-between mb-3">
-                    <h2 class="text-sm font-bold text-white uppercase tracking-wider">Imágenes en Memoria</h2>
-                    <span id="imageCountBadge" class="text-xs bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded-full">0 cargadas</span>
+            <div class="bg-[#2b2b2b] border border-[#3f3f46] rounded-xl p-5 shadow-lg flex flex-col gap-4">
+                <h2 class="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Cargar Texturas</h2>
+                <div class="border-2 border-dashed border-zinc-600 rounded-xl p-6 text-center hover:border-indigo-500 transition cursor-pointer relative" onclick="document.getElementById('fileInput').click()">
+                    <input type="file" id="fileInput" multiple accept="image/*" class="hidden" onchange="handleFiles(this.files)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-zinc-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <p class="text-xs text-zinc-300 font-medium">Haz clic para subir o arrastra imágenes aquí</p>
+                    <p class="text-[10px] text-zinc-500 mt-1">También puedes presionar Ctrl+V para pegar</p>
                 </div>
-                
-                <div id="imagePool" class="flex-1 min-h-[160px] max-h-[280px] overflow-y-auto border border-zinc-800 rounded-lg p-2 bg-[#1a1a1a] grid grid-cols-3 gap-2">
-                    <div class="col-span-3 flex flex-col items-center justify-center text-zinc-500 text-xs py-10 text-center">
-                        <svg class="w-8 h-8 mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        Presiona <code class="bg-zinc-800 text-zinc-300 px-1.5 py-0.5 rounded mx-1">Ctrl + V</code> aquí o arrastra imágenes para agregarlas.
-                    </div>
-                </div>
+            </div>
 
-                <div class="mt-3">
-                    <label class="btn-secondary w-full py-2 px-3 rounded-lg text-xs font-medium cursor-pointer flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                        Cargar desde Archivo
-                        <input type="file" id="fileInput" multiple accept="image/*" class="hidden">
-                    </label>
+            <div class="bg-[#2b2b2b] border border-[#3f3f46] rounded-xl p-5 shadow-lg flex flex-col gap-4">
+                <h2 class="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Opciones de Exportación</h2>
+                <div>
+                    <label class="text-xs text-zinc-400 block mb-1">Formato</label>
+                    <select id="exportFormat" onchange="updateStats()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <option value="image/png">PNG</option>
+                        <option value="image/jpeg">JPEG</option>
+                        <option value="image/webp">WebP</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-zinc-400 block mb-1">Calidad (<span id="qualityVal">90</span>%)</label>
+                    <input type="range" id="exportQuality" min="10" max="100" value="90" oninput="document.getElementById('qualityVal').innerText=this.value; updateStats();" class="w-full accent-indigo-600">
+                </div>
+                <div>
+                    <label class="text-xs text-zinc-400 block mb-1">Escala</label>
+                    <select id="exportScale" onchange="updateStats()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <option value="1">1x (Original)</option>
+                        <option value="0.5">0.5x (Mitad)</option>
+                        <option value="2">2x (Doble)</option>
+                    </select>
                 </div>
             </div>
         </aside>
 
-        <section class="lg:col-span-3 card-container rounded-xl p-5 flex flex-col relative shadow-md">
-            <div class="flex items-center justify-between pb-3 mb-4 border-b border-zinc-800">
-                <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full bg-orange-500"></span>
-                    <h2 class="text-sm font-bold text-white tracking-wide">Viewport Central / Atlas de Texturas</h2>
+        <div class="flex-1 flex flex-col gap-6">
+            <div class="bg-[#2b2b2b] border border-[#3f3f46] rounded-xl p-4 shadow-lg flex-1 flex flex-col min-h-[450px] relative overflow-hidden">
+                <div class="flex items-center justify-between mb-3 pb-2 border-b border-zinc-700">
+                    <span class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Área de Trabajo / Vista Previa</span>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="zoomCanvas(0.1)" class="bg-zinc-700 hover:bg-zinc-600 text-xs px-2.5 py-1 rounded text-white font-bold">+</button>
+                        <button onclick="resetZoom()" class="bg-zinc-700 hover:bg-zinc-600 text-xs px-2.5 py-1 rounded text-white">1:1</button>
+                        <button onclick="zoomCanvas(-0.1)" class="bg-zinc-700 hover:bg-zinc-600 text-xs px-2.5 py-1 rounded text-white font-bold">-</button>
+                    </div>
                 </div>
-                <div class="text-xs text-zinc-400" id="canvasDimensionsInfo">Dimensiones: 256 × 64 px</div>
-            </div>
 
-            <div id="viewportContainer" tabindex="0" class="flex-1 bg-[#121212] border border-zinc-800 rounded-lg flex items-center justify-center overflow-auto p-6 relative outline-none focus:ring-1 focus:ring-orange-500 min-h-[400px]">
-                
-                <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: linear-gradient(45deg, #fff 25%, transparent 25%), linear-gradient(-45deg, #fff 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #fff 75%), linear-gradient(-45deg, transparent 75%, #fff 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px;"></div>
-
-                <div id="atlasCanvasWrapper" class="relative shadow-2xl transition-all duration-200">
-                    <canvas id="atlasCanvas" class="block cursor-crosshair"></canvas>
-                    <div id="gridOverlay" class="absolute inset-0 grid pointer-events-auto"></div>
+                <div id="canvasContainer" class="flex-1 overflow-auto custom-scrollbar flex items-center justify-center bg-[#18181b] rounded-lg relative min-h-[350px]">
+                    <div id="viewportWrapper" class="relative transition-transform duration-100 origin-center">
+                        <canvas id="atlasCanvas" class="shadow-2xl bg-transparent block"></canvas>
+                    </div>
                 </div>
             </div>
 
-            <div class="mt-3 flex items-center justify-between text-xs text-zinc-400">
-                <span class="flex items-center gap-1.5">
-                    <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Haz clic en cualquier celda para asignarle una textura de la memoria.
-                </span>
-                <span id="autoDistributeStatus" class="text-orange-400 font-medium">Modo automático activo</span>
+            <div id="infoSection" class="bg-[#2b2b2b] border border-[#3f3f46] rounded-xl p-4 shadow-lg grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                <div class="bg-[#1e1e1e] border border-zinc-800 rounded-lg p-3 flex flex-col justify-center">
+                    <span class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">1. Resolución Total</span>
+                    <span id="infoResolution" class="text-sm font-bold text-white mt-1">256 × 64 px</span>
+                </div>
+                <div class="bg-[#1e1e1e] border border-zinc-800 rounded-lg p-3 flex flex-col justify-center">
+                    <span class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">2. Peso Estimado</span>
+                    <span id="infoWeight" class="text-sm font-bold text-white mt-1">Peso estimado: 0 B</span>
+                </div>
+                <div class="bg-[#1e1e1e] border border-zinc-800 rounded-lg p-3 flex flex-col justify-center">
+                    <span class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">3. Nivel de Impacto</span>
+                    <div class="mt-1 flex items-center gap-2">
+                        <span id="infoImpactBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">🟢 BAJO</span>
+                        <span id="infoImpactDesc" class="text-[11px] text-zinc-400 truncate">Recomendado para web y juegos</span>
+                    </div>
+                </div>
             </div>
-        </section>
-    </main>
 
-    <div id="exportModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
-        <div class="card-container w-full max-w-xl rounded-2xl p-6 shadow-2xl border border-zinc-700 transform scale-95 transition-transform duration-300" id="modalContent">
-            
-            <div class="flex items-center justify-between pb-4 mb-5 border-b border-zinc-800">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                    <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                    Opciones de Exportación Avanzada
-                </h3>
-                <button id="closeModalBtn" class="text-zinc-400 hover:text-white p-1 rounded-lg">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <div class="flex justify-end gap-3">
+                <button onclick="exportAtlas()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-6 py-3 rounded-xl shadow-lg transition text-sm flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Exportar Atlas de Texturas
                 </button>
             </div>
-
-            <div class="space-y-5">
-                <div>
-                    <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Factor de Escala</label>
-                    <select id="exportScale" class="w-full bg-[#1a1a1a] border border-zinc-700 text-white text-sm rounded-lg p-3 focus:outline-none focus:border-orange-500">
-                        <option value="0.25">0.25×</option>
-                        <option value="0.5">0.5×</option>
-                        <option value="1" selected>1×</ (Tamaño Original)</option>
-                        <option value="1.5">1.5×</</option>
-                        <option value="2">2×</</option>
-                        <option value="3">3×</option>
-                        <option value="4">4×</ (Alta Resolución)</option>
-                    </select>
-                </div>
-
-                <div>
-                    <div class="flex justify-between text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">
-                        <span>Calidad de Compresión</span>
-                        <span id="qualityVal" class="text-orange-400">90%</span>
-                    </div>
-                    <input type="range" id="exportQuality" min="0" max="100" value="90" class="w-full accent-orange-500 bg-zinc-800 rounded-lg h-2 cursor-pointer">
-                    <div class="flex justify-between text-[10px] text-zinc-500 mt-1">
-                        <span>0 (Máxima compresión)</span>
-                        <span>100 (Calidad máxima)</span>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Formato de Imagen (Ordenado de más pesado a más ligero)</label>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5" id="formatContainer">
-                        
-                        <div class="tooltip-container">
-                            <label class="flex items-center gap-3 p-3 rounded-lg bg-[#1a1a1a] border border-zinc-700 cursor-pointer hover:border-orange-500 transition-colors">
-                                <input type="radio" name="exportFormat" value="image/png" checked class="accent-orange-500">
-                                <div>
-                                    <div class="text-sm font-medium text-white">PNG <span class="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded ml-1">Sin pérdida</span></div>
-                                    <div class="text-xs text-zinc-400">Máxima calidad, con transparencia</div>
-                                </div>
-                            </label>
-                            <div class="tooltip-text"><b>PNG (Portable Network Graphics)</b><br>• Peso: Alto<br>• Características: Sin compresión con pérdida, soporta canal Alfa (transparencia).<br>• Uso recomendado: Spritesheets, texturas de videojuegos de precisión.</div>
-                        </div>
-
-                        <div class="tooltip-container">
-                            <label class="flex items-center gap-3 p-3 rounded-lg bg-[#1a1a1a] border border-zinc-700 cursor-pointer hover:border-orange-500 transition-colors">
-                                <input type="radio" name="exportFormat" value="image/bmp" class="accent-orange-500">
-                                <div>
-                                    <div class="text-sm font-medium text-white">BMP <span class="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded ml-1">Sin pérdida</span></div>
-                                    <div class="text-xs text-zinc-400">Mapa de bits puro sin comprimir</div>
-                                </div>
-                            </label>
-                            <div class="tooltip-text"><b>BMP (Bitmap)</b><br>• Peso: Muy Alto<br>• Características: Sin compresión alguna, archivos grandes.<br>• Uso recomendado: Carga rápida en motores legacy o procesamiento bruto.</div>
-                        </div>
-
-                        <div class="tooltip-container">
-                            <label class="flex items-center gap-3 p-3 rounded-lg bg-[#1a1a1a] border border-zinc-700 cursor-pointer hover:border-orange-500 transition-colors">
-                                <input type="radio" name="exportFormat" value="image/tiff" class="accent-orange-500">
-                                <div>
-                                    <div class="text-sm font-medium text-white">TIFF <span class="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded ml-1">Sin pérdida</span></div>
-                                    <div class="text-xs text-zinc-400">Formato profesional de archivo</div>
-                                </div>
-                            </label>
-                            <div class="tooltip-text"><b>TIFF (Tagged Image File Format)</b><br>• Peso: Muy Alto<br>• Características: Excelente fidelidad de color y metadatos.<br>• Uso recomendado: Edición avanzada e impresión.</div>
-                        </div>
-
-                        <div class="tooltip-container">
-                            <label class="flex items-center gap-3 p-3 rounded-lg bg-[#1a1a1a] border border-zinc-700 cursor-pointer hover:border-orange-500 transition-colors">
-                                <input type="radio" name="exportFormat" value="image/jpeg" class="accent-orange-500">
-                                <div>
-                                    <div class="text-sm font-medium text-white">JPEG <span class="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded ml-1">Equilibrado</span></div>
-                                    <div class="text-xs text-zinc-400">Estándar fotográfico con pérdida</div>
-                                </div>
-                            </label>
-                            <div class="tooltip-text"><b>JPEG (Joint Photographic Experts Group)</b><br>• Peso: Medio<br>• Características: Compresión con pérdida ajustable, sin transparencia.<br>• Uso recomendado: Fotografías y fondos sólidos.</div>
-                        </div>
-
-                        <div class="tooltip-container">
-                            <label class="flex items-center gap-3 p-3 rounded-lg bg-[#1a1a1a] border border-zinc-700 cursor-pointer hover:border-orange-500 transition-colors">
-                                <input type="radio" name="exportFormat" value="image/x-icon" class="accent-orange-500">
-                                <div>
-                                    <div class="text-sm font-medium text-white">ICO <span class="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded ml-1">Equilibrado</span></div>
-                                    <div class="text-xs text-zinc-400">Formato de iconos web / app</div>
-                                </div>
-                            </label>
-                            <div class="tooltip-text"><b>ICO (Icon Format)</b><br>• Peso: Medio-Bajo<br>• Características: Optimizado para dimensiones pequeñas.<br>• Uso recomendado: Favicons e iconos de escritorio.</div>
-                        </div>
-
-                        <div class="tooltip-container">
-                            <label class="flex items-center gap-3 p-3 rounded-lg bg-[#1a1a1a] border border-zinc-700 cursor-pointer hover:border-orange-500 transition-colors">
-                                <input type="radio" name="exportFormat" value="image/webp" class="accent-orange-500">
-                                <div>
-                                    <div class="text-sm font-medium text-white">WebP <span class="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded ml-1">Optimizado</span></div>
-                                    <div class="text-xs text-zinc-400">Moderno, excelente compresión/calidad</div>
-                                </div>
-                            </label>
-                            <div class="tooltip-text"><b>WebP</b><br>• Peso: Bajo<br>• Características: Alta eficiencia de compresión con y sin pérdida, soporte alpha.<br>• Uso recomendado: Web moderna y motores webgl.</div>
-                        </div>
-
-                        <div class="tooltip-container">
-                            <label class="flex items-center gap-3 p-3 rounded-lg bg-[#1a1a1a] border border-zinc-700 cursor-pointer hover:border-orange-500 transition-colors">
-                                <input type="radio" name="exportFormat" value="image/avif" class="accent-orange-500">
-                                <div>
-                                    <div class="text-sm font-medium text-white">AVIF <span class="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded ml-1">Más Ligero</span></div>
-                                    <div class="text-xs text-zinc-400">Máxima compresión de nueva generación</div>
-                                </div>
-                            </label>
-                            <div class="tooltip-text"><b>AVIF (AV1 Image File Format)</b><br>• Peso: Mínimo<br>• Características: Relación compresión/calidad superior basada en AV1.<br>• Uso recomendado: Optimización extrema de ancho de banda.</div>
-                        </div>
-
-                        <div class="tooltip-container">
-                            <label class="flex items-center gap-3 p-3 rounded-lg bg-[#1a1a1a] border border-zinc-700 cursor-pointer hover:border-orange-500 transition-colors">
-                                <input type="radio" name="exportFormat" value="image/gif" class="accent-orange-500">
-                                <div>
-                                    <div class="text-sm font-medium text-white">GIF <span class="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded ml-1">Animado</span></div>
-                                    <div class="text-xs text-zinc-400">Paleta indexada de 256 colores</div>
-                                </div>
-                            </label>
-                            <div class="tooltip-text"><b>GIF (Graphics Interchange Format)</b><br>• Peso: Variable<br>• Características: Soporte para animaciones y transparencia binaria de 1 bit.<br>• Uso recomendado: Animaciones sencillas o gráficos simples.</div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-zinc-800">
-                <button id="cancelModalBtn" class="btn-secondary px-5 py-2.5 rounded-xl text-sm font-medium">Cancelar</button>
-                <button id="confirmExportBtn" class="btn-primary px-6 py-2.5 rounded-xl text-sm font-semibold shadow">Confirmar Exportación</button>
-            </div>
         </div>
-    </div>
+    </main>
 
     <script>
-        const state = {
-            cellSize: 64,
-            cols: 4,
-            rows: 1,
-            showGridLines: true,
-            images: [],      
-            cellAssignments: {}  
-        };
+        let gridCols = 4;
+        let gridRows = 4;
+        let cellWidth = 128;
+        let cellHeight = 128;
+        let textures = {};
+        let currentZoom = 1;
 
-        const cellSizeSelect = document.getElementById('cellSizeSelect');
-        const gridColsInput = document.getElementById('gridCols');
-        const gridRowsInput = document.getElementById('gridRows');
-        const toggleGridLines = document.getElementById('toggleGridLines');
-        const imagePool = document.getElementById('imagePool');
-        const imageCountBadge = document.getElementById('imageCountBadge');
-        const fileInput = document.getElementById('fileInput');
-        const viewportContainer = document.getElementById('viewportContainer');
-        const atlasCanvas = document.getElementById('atlasCanvas');
-        const gridOverlay = document.getElementById('gridOverlay');
-        const canvasDimensionsInfo = document.getElementById('canvasDimensionsInfo');
-        const clearBtn = document.getElementById('clearBtn');
-        
-        const exportModalBtn = document.getElementById('exportModalBtn');
-        const exportModal = document.getElementById('exportModal');
-        const modalContent = document.getElementById('modalContent');
-        const closeModalBtn = document.getElementById('closeModalBtn');
-        const cancelModalBtn = document.getElementById('cancelModalBtn');
-        const confirmExportBtn = document.getElementById('confirmExportBtn');
-        const exportScaleSelect = document.getElementById('exportScale');
-        const exportQualitySlider = document.getElementById('exportQuality');
-        const qualityVal = document.getElementById('qualityVal');
+        const canvas = document.getElementById('atlasCanvas');
+        const ctx = canvas.getContext('2d');
 
-        function initApp() {
-            setupEventListeners();
-            updateGridDimensions();
-            redrawCanvas();
-        }
+        window.addEventListener('DOMContentLoaded', () => {
+            updateGridConfig();
+            setupPasteListener();
+        });
 
-        function setupEventListeners() {
-            cellSizeSelect.addEventListener('change', (e) => {
-                state.cellSize = parseInt(e.target.value);
-                updateGridDimensions();
-                redrawCanvas();
-            });
-
-            gridColsInput.addEventListener('input', (e) => {
-                let val = parseInt(e.target.value) || 1;
-                state.cols = Math.max(1, Math.min(16, val));
-                updateGridDimensions();
-                redrawCanvas();
-            });
-
-            gridRowsInput.addEventListener('input', (e) => {
-                let val = parseInt(e.target.value) || 1;
-                state.rows = Math.max(1, Math.min(16, val));
-                updateGridDimensions();
-                redrawCanvas();
-            });
-
-            toggleGridLines.addEventListener('change', (e) => {
-                state.showGridLines = e.target.checked;
-                redrawCanvas();
-            });
-
-            fileInput.addEventListener('change', (e) => {
-                handleFiles(e.target.files);
-                fileInput.value = '';
-            });
-
+        function setupPasteListener() {
             window.addEventListener('paste', (e) => {
-                const items = e.clipboardData?.items;
-                if (!items) return;
-                const files = [];
+                const items = e.clipboardData.items;
                 for (let i = 0; i < items.length; i++) {
                     if (items[i].type.indexOf('image') !== -1) {
                         const blob = items[i].getAsFile();
-                        if (blob) files.push(blob);
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            const img = new Image();
+                            img.onload = function() {
+                                assignToNextAvailableCell(img);
+                            };
+                            img.src = event.target.result;
+                        };
+                        reader.readAsDataURL(blob);
+                        break;
                     }
                 }
-                if (files.length > 0) {
-                    handleFiles(files);
+            });
+        }
+
+        function assignToNextAvailableCell(imgObj) {
+            for (let r = 0; r < gridRows; r++) {
+                for (let c = 0; c < gridCols; c++) {
+                    const key = `${c}-${r}`;
+                    if (!textures[key]) {
+                        textures[key] = imgObj;
+                        redrawAtlas();
+                        updateStats();
+                        return;
+                    }
                 }
-            });
+            }
+            textures[`0-0`] = imgObj;
+            redrawAtlas();
+            updateStats();
+        }
 
-            clearBtn.addEventListener('click', () => {
-                state.images = [];
-                state.cellAssignments = {};
-                updateImagePoolUI();
-                redrawCanvas();
-            });
+        function updateGridConfig() {
+            gridCols = parseInt(document.getElementById('gridCols').value) || 4;
+            gridRows = parseInt(document.getElementById('gridRows').value) || 4;
+            cellWidth = parseInt(document.getElementById('cellWidth').value) || 128;
+            cellHeight = parseInt(document.getElementById('cellHeight').value) || 128;
 
-            exportModalBtn.addEventListener('click', openModal);
-            closeModalBtn.addEventListener('click', closeModal);
-            cancelModalBtn.addEventListener('click', closeModal);
-            exportModal.addEventListener('click', (e) => {
-                if (e.target === exportModal) closeModal();
-            });
+            canvas.width = gridCols * cellWidth;
+            canvas.height = gridRows * cellHeight;
 
-            exportQualitySlider.addEventListener('input', (e) => {
-                qualityVal.textContent = e.target.value + '%';
-            });
-
-            confirmExportBtn.addEventListener('click', exportImage);
+            redrawAtlas();
+            updateStats();
         }
 
         function handleFiles(files) {
-            let loadedCount = 0;
-            Array.from(files).forEach(file => {
+            Array.from(files).forEach((file, index) => {
                 const reader = new FileReader();
-                reader.onload = (event) => {
+                reader.onload = function(e) {
                     const img = new Image();
-                    img.onload = () => {
-                        state.images.push(img);
-                        loadedCount++;
-                        if (loadedCount === files.length) {
-                            autoAssignImages();
-                            updateImagePoolUI();
-                            redrawCanvas();
-                        }
+                    img.onload = function() {
+                        assignToNextAvailableCell(img);
                     };
-                    img.src = event.target.result;
+                    img.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             });
+            document.getElementById('fileInput').value = '';
         }
 
-        function autoAssignImages() {
-            let imgIdx = 0;
-            const totalCells = state.cols * state.rows;
-            if (state.images.length > totalCells) {
-                const neededRows = Math.ceil(state.images.length / state.cols);
-                if (neededRows > state.rows) {
-                    state.rows = Math.min(16, neededRows);
-                    gridRowsInput.value = state.rows;
-                    updateGridDimensions();
+        function clearAllTextures() {
+            textures = {};
+            redrawAtlas();
+            updateStats();
+        }
+
+        function redrawAtlas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const patternSize = 16;
+            for (let x = 0; x < canvas.width; x += patternSize) {
+                for (let y = 0; y < canvas.height; y += patternSize) {
+                    ctx.fillStyle = ((x / patternSize + y / patternSize) % 2 === 0) ? '#262629' : '#1e1e20';
+                    ctx.fillRect(x, y, patternSize, patternSize);
                 }
             }
 
-            for (let r = 0; r < state.rows; r++) {
-                for (let c = 0; c < state.cols; c++) {
-                    const key = `${c}_${r}`;
-                    if (state.cellAssignments[key] === undefined) {
-                        if (imgIdx < state.images.length) {
-                            state.cellAssignments[key] = imgIdx;
-                            imgIdx++;
-                        }
+            for (let r = 0; r < gridRows; r++) {
+                for (let c = 0; c < gridCols; c++) {
+                    const key = `${c}-${r}`;
+                    const x = c * cellWidth;
+                    const y = r * cellHeight;
+
+                    if (textures[key]) {
+                        ctx.drawImage(textures[key], x, y, cellWidth, cellHeight);
+                    }
+
+                    ctx.strokeStyle = '#3f3f46';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(x, y, cellWidth, cellHeight);
+
+                    if (!textures[key]) {
+                        ctx.fillStyle = '#71717a';
+                        ctx.font = '10px Inter, sans-serif';
+                        ctx.fillText(`${c},${r}`, x + 6, y + 16);
                     }
                 }
             }
         }
 
-        function updateImagePoolUI() {
-            imageCountBadge.textContent = `${state.images.length} cargadas`;
-            if (state.images.length === 0) {
-                imagePool.innerHTML = `
-                    <div class="col-span-3 flex flex-col items-center justify-center text-zinc-500 text-xs py-10 text-center">
-                        <svg class="w-8 h-8 mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        Presiona <code class="bg-zinc-800 text-zinc-300 px-1.5 py-0.5 rounded mx-1">Ctrl + V</code> aquí o arrastra imágenes para agregarlas.
-                    </div>
-                `;
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const clickX = (e.clientX - rect.left) * scaleX;
+            const clickY = (e.clientY - rect.top) * scaleY;
+
+            const c = Math.floor(clickX / cellWidth);
+            const r = Math.floor(clickY / cellHeight);
+
+            if (c >= 0 && c < gridCols && r >= 0 && r < gridRows) {
+                const key = `${c}-${r}`;
+                if (textures[key]) {
+                    delete textures[key];
+                    redrawAtlas();
+                    updateStats();
+                }
+            }
+        });
+
+        function zoomCanvas(delta) {
+            currentZoom = Math.max(0.2, Math.min(4, currentZoom + delta));
+            document.getElementById('viewportWrapper').style.transform = `scale(${currentZoom})`;
+        }
+
+        function resetZoom() {
+            currentZoom = 1;
+            document.getElementById('viewportWrapper').style.transform = `scale(1)`;
+        }
+
+        function updateStats() {
+            const totalWidth = gridCols * cellWidth;
+            const totalHeight = gridRows * cellHeight;
+
+            const hasTextures = Object.keys(textures).length > 0;
+
+            const resEl = document.getElementById('infoResolution');
+            const weightEl = document.getElementById('infoWeight');
+            const badgeEl = document.getElementById('infoImpactBadge');
+            const descEl = document.getElementById('infoImpactDesc');
+
+            resEl.innerText = `${totalWidth} × ${totalHeight} px`;
+
+            if (!hasTextures) {
+                weightEl.innerText = "Peso estimado: 0 B";
+                badgeEl.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-zinc-700 text-zinc-300 border border-zinc-600";
+                badgeEl.innerText = "⚪ SIN DATOS";
+                descEl.innerText = "Sin datos — agrega texturas para ver la información";
                 return;
             }
 
-            imagePool.innerHTML = '';
-            state.images.forEach((img, idx) => {
-                const thumb = document.createElement('div');
-                thumb.className = "relative group aspect-square bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden flex items-center justify-center p-1 cursor-pointer hover:border-orange-500";
-                thumb.innerHTML = `
-                    <img src="${img.src}" class="w-full h-full object-contain">
-                    <span class="absolute top-1 left-1 bg-black/70 text-white text-[10px] px-1 rounded">#${idx+1}</span>
-                    <button class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-red-400 text-xs font-bold">Quitar</button>
-                `;
-                thumb.querySelector('button').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    removeImage(idx);
-                });
-                imagePool.appendChild(thumb);
-            });
-        }
+            const format = document.getElementById('exportFormat').value;
+            const quality = parseInt(document.getElementById('exportQuality').value) / 100;
+            const scale = parseFloat(document.getElementById('exportScale').value);
 
-        function removeImage(index) {
-            state.images.splice(index, 1);
-            const newAssignments = {};
-            for (let key in state.cellAssignments) {
-                const assignedIdx = state.cellAssignments[key];
-                if (assignedIdx === index) {
-                } else if (assignedIdx > index) {
-                    newAssignments[key] = assignedIdx - 1;
-                } else {
-                    newAssignments[key] = assignedIdx;
-                }
+            const scaledWidth = totalWidth * scale;
+            const scaledHeight = totalHeight * scale;
+            const totalPixels = scaledWidth * scaledHeight;
+
+            let estimatedBytes = 0;
+            if (format === 'image/png') {
+                estimatedBytes = totalPixels * 0.35;
+            } else if (format === 'image/jpeg') {
+                estimatedBytes = totalPixels * 0.15 * quality;
+            } else if (format === 'image/webp') {
+                estimatedBytes = totalPixels * 0.12 * quality;
             }
-            state.cellAssignments = newAssignments;
-            autoAssignImages();
-            updateImagePoolUI();
-            redrawCanvas();
-        }
 
-        function updateGridDimensions() {
-            const totalWidth = state.cols * state.cellSize;
-            const totalHeight = state.rows * state.cellSize;
+            let sizeStr = "";
+            if (estimatedBytes < 1024) {
+                sizeStr = `${Math.round(estimatedBytes)} B`;
+            } else if (estimatedBytes < 1024 * 1024) {
+                sizeStr = `${(estimatedBytes / 1024).toFixed(1)} KB`;
+            } else {
+                sizeStr = `${(estimatedBytes / (1024 * 1024)).toFixed(2)} MB`;
+            }
 
-            atlasCanvas.width = totalWidth;
-            atlasCanvas.height = totalHeight;
-            canvasDimensionsInfo.textContent = `Dimensiones: ${totalWidth} × ${totalHeight} px`;
+            weightEl.innerText = `Peso estimado: ${sizeStr}`;
 
-            gridOverlay.style.gridTemplateColumns = `repeat(${state.cols}, minmax(0, 1fr))`;
-            gridOverlay.style.gridTemplateRows = `repeat(${state.rows}, minmax(0, 1fr))`;
-            gridOverlay.innerHTML = '';
-
-            for (let r = 0; r < state.rows; r++) {
-                for (let c = 0; c < state.cols; c++) {
-                    const cellDiv = document.createElement('div');
-                    cellDiv.className = "border border-orange-500/20 hover:border-orange-500 hover:bg-orange-500/10 transition-colors cursor-pointer relative flex items-center justify-center group";
-                    cellDiv.dataset.col = c;
-                    cellDiv.dataset.row = r;
-
-                    cellDiv.addEventListener('click', () => {
-                        openCellAssignmentModal(c, r);
-                    });
-
-                    gridOverlay.appendChild(cellDiv);
-                }
+            if (estimatedBytes < 80 * 1024) {
+                badgeEl.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                badgeEl.innerText = "🟢 BAJO";
+                descEl.innerText = "Recomendado para web, juegos móviles y archivos ligeros";
+            } else if (estimatedBytes < 500 * 1024) {
+                badgeEl.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30";
+                badgeEl.innerText = "🟡 MEDIO";
+                descEl.innerText = "Equilibrado, válido para la mayoría de usos";
+            } else {
+                badgeEl.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30";
+                badgeEl.innerText = "🔴 ALTO";
+                descEl.innerText = "Mayor calidad, ideal para impresión o archivos fuente";
             }
         }
 
-        function redrawCanvas() {
-            const ctx = atlasCanvas.getContext('2d');
-            ctx.clearRect(0, 0, atlasCanvas.width, atlasCanvas.height);
+        function exportAtlas() {
+            const format = document.getElementById('exportFormat').value;
+            const quality = parseInt(document.getElementById('exportQuality').value) / 100;
+            const scale = parseFloat(document.getElementById('exportScale').value);
 
-            for (let r = 0; r < state.rows; r++) {
-                for (let c = 0; c < state.cols; c++) {
-                    const key = `${c}_${r}`;
-                    const imgIdx = state.cellAssignments[key];
-                    const x = c * state.cellSize;
-                    const y = r * state.cellSize;
-
-                    if (imgIdx !== undefined && state.images[imgIdx]) {
-                        const img = state.images[imgIdx];
-                        ctx.drawImage(img, x, y, state.cellSize, state.cellSize);
-                    } else {
-                        ctx.fillStyle = '#1e1e1e';
-                        ctx.fillRect(x, y, state.cellSize, state.cellSize);
-                    }
-
-                    if (state.showGridLines) {
-                        ctx.strokeStyle = 'rgba(230, 126, 34, 0.3)';
-                        ctx.lineWidth = 1;
-                        ctx.strokeRect(x, y, state.cellSize, state.cellSize);
-                    }
-                }
-            }
-        }
-
-        function openCellAssignmentModal(c, r) {
-            if (state.images.length === 0) {
-                return;
-            }
-
-            const modalSel = document.createElement('div');
-            modalSel.className = "fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4";
-            modalSel.innerHTML = `
-                <div class="card-container max-w-md w-full rounded-xl p-5 border border-zinc-700 shadow-xl">
-                    <h4 class="text-sm font-bold text-white mb-3">Asignar Textura a Celda [${c+1}, ${r+1}]</h4>
-                    <p class="text-xs text-zinc-400 mb-4">Selecciona qué imagen de la memoria deseas colocar en esta posición exacta:</p>
-                    <div class="grid grid-cols-3 gap-2 max-h-60 overflow-y-auto mb-4 p-2 bg-[#1a1a1a] rounded-lg border border-zinc-800">
-                        <div data-index="-1" class="aspect-square bg-zinc-900 border border-zinc-700 rounded-lg flex items-center justify-center text-xs text-zinc-400 cursor-pointer hover:border-orange-500">Vaciar Celda</div>
-                        ${state.images.map((img, idx) => `
-                            <div data-index="${idx}" class="aspect-square bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden p-1 cursor-pointer hover:border-orange-500 relative flex items-center justify-center">
-                                <img src="${img.src}" class="w-full h-full object-contain">
-                                <span class="absolute top-1 left-1 bg-black/70 text-white text-[9px] px-1 rounded">#${idx+1}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="flex justify-end">
-                        <button id="closeCellModal" class="btn-secondary px-4 py-2 rounded-lg text-xs font-medium">Cancelar</button>
-                    </div>
-                </div>
-            `;
-
-            modalSel.querySelectorAll('div[data-index]').forEach(el => {
-                el.addEventListener('click', () => {
-                    const idx = parseInt(el.dataset.index);
-                    const key = `${c}_${r}`;
-                    if (idx === -1) {
-                        delete state.cellAssignments[key];
-                    } else {
-                        state.cellAssignments[key] = idx;
-                    }
-                    redrawCanvas();
-                    document.body.removeChild(modalSel);
-                });
-            });
-
-            modalSel.querySelector('#closeCellModal').addEventListener('click', () => {
-                document.body.removeChild(modalSel);
-            });
-
-            document.body.appendChild(modalSel);
-        }
-
-        function openModal() {
-            exportModal.classList.remove('hidden');
-            setTimeout(() => {
-                exportModal.classList.remove('opacity-0');
-                modalContent.classList.remove('scale-95');
-                modalContent.classList.add('scale-100');
-            }, 10);
-        }
-
-        function closeModal() {
-            exportModal.classList.add('opacity-0');
-            modalContent.classList.remove('scale-100');
-            modalContent.classList.add('scale-95');
-            setTimeout(() => {
-                exportModal.classList.add('hidden');
-            }, 300);
-        }
-
-        function exportImage() {
-            const scale = parseFloat(exportScaleSelect.value);
-            const quality = parseInt(exportQualitySlider.value) / 100;
-            const selectedFormatInput = document.querySelector('input[name="exportFormat"]:checked');
-            const format = selectedFormatInput ? selectedFormatInput.value : 'image/png';
-
-            const originalWidth = atlasCanvas.width;
-            const originalHeight = atlasCanvas.height;
             const exportCanvas = document.createElement('canvas');
-            exportCanvas.width = Math.round(originalWidth * scale);
-            exportCanvas.height = Math.round(originalHeight * scale);
+            const exportCtx = exportCanvas.getContext('2d');
 
-            const ctx = exportCanvas.getContext('2d');
-            ctx.imageSmoothingEnabled = scale > 1;
-            ctx.drawImage(atlasCanvas, 0, 0, exportCanvas.width, exportCanvas.height);
+            const totalWidth = gridCols * cellWidth;
+            const totalHeight = gridRows * cellHeight;
 
-            const now = new Date();
-            const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
-            const extMap = {
-                'image/png': 'png',
-                'image/jpeg': 'jpg',
-                'image/webp': 'webp',
-                'image/gif': 'gif',
-                'image/bmp': 'bmp',
-                'image/tiff': 'tiff',
-                'image/x-icon': 'ico',
-                'image/avif': 'avif'
-            };
-            const ext = extMap[format] || 'png';
-            const filename = `atlas_texturas_${dateStr}_${ext}`;
+            exportCanvas.width = totalWidth * scale;
+            exportCanvas.height = totalHeight * scale;
 
-            exportCanvas.toBlob((blob) => {
-                if (!blob) {
-                    const dataUrl = exportCanvas.toDataURL(format, quality);
-                    triggerDownload(dataUrl, filename);
-                    closeModal();
-                    return;
+            exportCtx.imageSmoothingEnabled = true;
+            exportCtx.imageSmoothingQuality = 'high';
+
+            for (let r = 0; r < gridRows; r++) {
+                for (let c = 0; c < gridCols; c++) {
+                    const key = `${c}-${r}`;
+                    if (textures[key]) {
+                        const x = c * cellWidth * scale;
+                        const y = r * cellHeight * scale;
+                        const w = cellWidth * scale;
+                        const h = cellHeight * scale;
+                        exportCtx.drawImage(textures[key], x, y, w, h);
+                    }
                 }
-                const url = URL.createObjectURL(blob);
-                triggerDownload(url, filename);
-                URL.revokeObjectURL(url);
-                closeModal();
-            }, format, quality);
-        }
+            }
 
-        function triggerDownload(url, filename) {
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            const dataUrl = exportCanvas.toDataURL(format, quality);
+            const link = document.createElement('a');
+            link.download = `texture_atlas.${format.split('/')[1]}`;
+            link.href = dataUrl;
+            link.click();
         }
-
-        window.onload = initApp;
     </script>
 </body>
 </html>
