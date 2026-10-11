@@ -176,10 +176,14 @@
 
         const canvas = document.getElementById('atlasCanvas');
         const ctx = canvas.getContext('2d');
+        const container = document.getElementById('canvasContainer');
+
+        let initialPinchDistance = null;
 
         window.addEventListener('DOMContentLoaded', () => {
             updateGridConfig();
             setupPasteListener();
+            setupTouchZoom();
             updateFilteringUI();
         });
 
@@ -202,6 +206,36 @@
                     }
                 }
             });
+        }
+
+        function setupTouchZoom() {
+            container.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 2) {
+                    initialPinchDistance = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                }
+            }, { passive: true });
+
+            container.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 2 && initialPinchDistance !== null) {
+                    const currentDistance = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    const diff = (currentDistance - initialPinchDistance) * 0.005;
+                    currentZoom = Math.max(0.2, Math.min(4, currentZoom + diff));
+                    document.getElementById('viewportWrapper').style.transform = `scale(${currentZoom})`;
+                    initialPinchDistance = currentDistance;
+                }
+            }, { passive: true });
+
+            container.addEventListener('touchend', (e) => {
+                if (e.touches.length < 2) {
+                    initialPinchDistance = null;
+                }
+            }, { passive: true });
         }
 
         function assignToNextAvailableCell(imgObj) {
@@ -281,9 +315,17 @@
         }
 
         function redrawAtlas() {
-            ctx.imageSmoothingEnabled = (filteringMode === 'blur');
             if (filteringMode === 'blur') {
-                ctx.imageSmoothingQuality = 'high';
+                ctx.imageSmoothingEnabled = true;
+                if (qualityMultiplier <= 0.5) {
+                    ctx.imageSmoothingQuality = 'low';
+                } else if (qualityMultiplier <= 1.0) {
+                    ctx.imageSmoothingQuality = 'medium';
+                } else {
+                    ctx.imageSmoothingQuality = 'high';
+                }
+            } else {
+                ctx.imageSmoothingEnabled = false;
             }
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -303,7 +345,19 @@
                     const y = r * cellHeight;
 
                     if (textures[key]) {
-                        ctx.drawImage(textures[key], x, y, cellWidth, cellHeight);
+                        if (filteringMode === 'pixel' && qualityMultiplier < 1.0) {
+                            const step = Math.round(1 / qualityMultiplier);
+                            const tempCanvas = document.createElement('canvas');
+                            const tempCtx = tempCanvas.getContext('2d');
+                            tempCanvas.width = Math.max(1, Math.floor(cellWidth * qualityMultiplier));
+                            tempCanvas.height = Math.max(1, Math.floor(cellHeight * qualityMultiplier));
+                            tempCtx.imageSmoothingEnabled = false;
+                            tempCtx.drawImage(textures[key], 0, 0, tempCanvas.width, tempCanvas.height);
+                            ctx.imageSmoothingEnabled = false;
+                            ctx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, x, y, cellWidth, cellHeight);
+                        } else {
+                            ctx.drawImage(textures[key], x, y, cellWidth, cellHeight);
+                        }
                     }
 
                     ctx.strokeStyle = '#3f3f46';
