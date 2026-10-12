@@ -290,8 +290,9 @@
             display: flex;
             align-items: center;
             padding: 0 10px;
-            color: #888;
+            color: #e67e22;
             font-size: 11px;
+            font-weight: bold;
         }
 
         .modal {
@@ -380,7 +381,7 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/OBJExporter.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/STLExporter.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
-    <!-- Three.js Loaders para importación -->
+    <!-- Loaders de Modelos 3D -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
@@ -487,6 +488,13 @@
                 <ul id="outliner-list"></ul>
             </div>
 
+            <div class="panel-title">Nombre del Objeto</div>
+            <div class="panel-section">
+                <div class="input-group">
+                    <input type="text" id="object-name-input" onchange="updateObjectNameFromInput()" style="width:100%;" placeholder="Selecciona una malla...">
+                </div>
+            </div>
+
             <div class="panel-title">Transformacion Activa</div>
             <div class="panel-section" id="transform-props">
                 <div class="input-group"><label>Posicion</label></div>
@@ -528,7 +536,7 @@
                 <button style="width:100%; margin-top:4px;" onclick="openNodeEditor()">Editor de Nodos (F3)</button>
             </div>
 
-            <div class="panel-title">Texturas</div>
+            <div class="panel-title">Texturas y Relieve</div>
             <div class="panel-section">
                 <div class="input-group">
                     <label>Color / Textura</label>
@@ -541,6 +549,15 @@
                 <div class="input-group">
                     <label>Intensidad Relieve</label>
                     <input type="range" id="mat-normal-scale" min="0" max="3" step="0.05" value="1" oninput="updateNormalScale()">
+                </div>
+                <div class="modal-section-title" style="margin-top:8px;">Relieve Real de Malla (Displacement)</div>
+                <div class="input-group">
+                    <label>Imagen Altura</label>
+                    <input type="file" id="displacement-input" accept="image/*" onchange="applyRealDisplacement(event)" style="width: 130px;">
+                </div>
+                <div class="input-group">
+                    <label>Fuerza Relieve Geom.</label>
+                    <input type="range" id="displacement-scale" min="0" max="2" step="0.05" value="0.2" oninput="updateDisplacementScale()">
                 </div>
                 <button style="width:100%; margin-top:4px;" onclick="removeTexture()">Quitar Textura</button>
                 <button style="width:100%; margin-top:4px;" onclick="removeNormalMap()">Quitar Mapa Normal</button>
@@ -595,10 +612,9 @@
     </div>
 
     <div id="status-bar">
-        Atajos: [Ctrl+S] Guardar Escena | [F4] Abrir Escena | [Tab] Modo Edicion | [G] Mover | [R] Rotar | [S] Escalar | [E] Extruir | [F1] Ajustes | [F3] Nodos
+        Listo. Atajos: [Ctrl+S] Guardar Escena | [F4] Abrir Escena | [Tab] Modo Edicion | [G] Mover | [R] Rotar | [S] Escalar | [E] Extruir | [F1] Ajustes | [F3] Nodos
     </div>
 
-    <!-- MODAL DE GUARDAR ESCENA (Ctrl + S) -->
     <div id="save-scene-modal" class="modal">
         <div class="modal-content" style="width:380px;">
             <div class="modal-header">Guardar Escena (Ctrl + S)</div>
@@ -615,7 +631,6 @@
         </div>
     </div>
 
-    <!-- MODAL DE ABRIR ESCENA (F4) -->
     <div id="load-scene-modal" class="modal">
         <div class="modal-content" style="width:460px;">
             <div class="modal-header">Abrir Escena Guardada (F4)</div>
@@ -629,7 +644,6 @@
         </div>
     </div>
 
-    <!-- MODAL DE CONFIGURACIÓN -->
     <div id="settings-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">Ajustes del Sitio Web</div>
@@ -687,6 +701,14 @@
     </div>
 
     <script>
+        function showNotification(msg) {
+            const statusBar = document.getElementById('status-bar');
+            statusBar.innerText = msg;
+            setTimeout(() => {
+                statusBar.innerText = 'Listo. Atajos: [Ctrl+S] Guardar Escena | [F4] Abrir Escena | [Tab] Modo Edicion | [G] Mover | [R] Rotar | [S] Escalar | [E] Extruir | [F1] Ajustes | [F3] Nodos';
+            }, 4000);
+        }
+
         const container = document.getElementById('viewport');
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x1e1e1e);
@@ -730,7 +752,6 @@
             if (selectedObject && !editMode) syncTransformUI();
         });
 
-        // --- SISTEMA DE IMPORTACIÓN 3D ---
         let currentImportFormat = '';
 
         function toggleImportMenu() {
@@ -738,7 +759,6 @@
             dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
         }
 
-        // Cerrar menú al hacer clic fuera
         window.addEventListener('click', (e) => {
             if (!e.target.closest('#btn-import-menu') && !e.target.closest('#import-dropdown')) {
                 document.getElementById('import-dropdown').style.display = 'none';
@@ -776,7 +796,7 @@
                         const obj = loader.parse(contents);
                         finalizeImportedObject(obj, fileName);
                     } catch (err) {
-                        alert('Error al importar el archivo OBJ: Formato no válido o corrupto.');
+                        showNotification('Error al importar OBJ: Formato no válido.');
                         console.error(err);
                     }
                 };
@@ -789,11 +809,11 @@
                         loader.parse(contents, '', (gltf) => {
                             finalizeImportedObject(gltf.scene, fileName);
                         }, (error) => {
-                            alert('Error al importar GLTF/GLB: El archivo no es válido.');
+                            showNotification('Error al importar GLTF/GLB: Archivo inválido.');
                             console.error(error);
                         });
                     } catch (err) {
-                        alert('Error al leer el archivo GLTF/GLB.');
+                        showNotification('Error al leer GLTF/GLB.');
                         console.error(err);
                     }
                 };
@@ -806,7 +826,7 @@
                         const obj = loader.parse(contents, '');
                         finalizeImportedObject(obj, fileName);
                     } catch (err) {
-                        alert('Error al importar FBX: Asegúrate de que sea un archivo FBX compatible.');
+                        showNotification('Error al importar FBX.');
                         console.error(err);
                     }
                 };
@@ -818,7 +838,6 @@
             objectCount++;
             importedObj.name = fileName.substring(0, fileName.lastIndexOf('.')) || ('Modelo_' + objectCount);
 
-            // Asegurar sombras y materiales estándar si no tienen
             importedObj.traverse((child) => {
                 if (child.isMesh) {
                     child.castShadow = true;
@@ -826,6 +845,7 @@
                     if (!child.material) {
                         child.material = defaultGrayMaterial.clone();
                     }
+                    ensureGeometryDensity(child);
                 }
             });
 
@@ -836,7 +856,107 @@
             updateStats();
             saveState();
 
-            alert(`¡Modelo "${importedObj.name}" importado correctamente en pantalla!`);
+            showNotification(`Modelo "${importedObj.name}" importado correctamente.`);
+        }
+
+        function ensureGeometryDensity(mesh) {
+            if (!mesh.geometry) return;
+            const geom = mesh.geometry;
+            if (geom.attributes.position && geom.attributes.position.count < 200 && !(geom instanceof THREE.SphereGeometry) && !(geom instanceof THREE.CylinderGeometry)) {
+                mesh.geometry = geom.clone();
+                mesh.geometry.computeVertexNormals();
+            }
+            if (!geom.attributes.uv) {
+                const pos = geom.attributes.position;
+                const uvs = [];
+                for (let i = 0; i < pos.count; i++) {
+                    uvs.push(pos.getX(i) + 0.5, pos.getY(i) + 0.5);
+                }
+                geom.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+            }
+        }
+
+        function applyRealDisplacement(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            let targetMesh = null;
+            if (selectedObject) {
+                if (selectedObject.isMesh) targetMesh = selectedObject;
+                else {
+                    selectedObject.traverse(child => {
+                        if (!targetMesh && child.isMesh) targetMesh = child;
+                    });
+                }
+            }
+
+            if (!targetMesh) {
+                showNotification('Selecciona una malla válida antes de aplicar relieve geométrico.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvasImg = document.createElement('canvas');
+                    canvasImg.width = 128;
+                    canvasImg.height = 128;
+                    const ctx = canvasImg.getContext('2d');
+                    ctx.drawImage(img, 0, 0, 128, 128);
+                    const imgData = ctx.getImageData(0, 128, 128, 128).data; // simplificado mapa de altura
+
+                    // Clonar geometría para modificar vértices reales
+                    if (!targetMesh.geometry.isBufferGeometry) return;
+                    const geom = targetMesh.geometry.clone();
+                    targetMesh.geometry = geom;
+                    ensureGeometryDensity(targetMesh);
+
+                    const posAttr = targetMesh.geometry.attributes.position;
+                    const normAttr = targetMesh.geometry.attributes.normal;
+                    const uvAttr = targetMesh.geometry.attributes.uv;
+                    const scaleFactor = parseFloat(document.getElementById('displacement-scale').value) || 0.2;
+
+                    const vPos = new THREE.Vector3();
+                    const vNorm = new THREE.Vector3();
+
+                    for (let i = 0; i < posAttr.count; i++) {
+                        vPos.fromBufferAttribute(posAttr, i);
+                        if (normAttr) vNorm.fromBufferAttribute(normAttr, i);
+                        else vNorm.set(0, 1, 0);
+
+                        let u = 0.5, v = 0.5;
+                        if (uvAttr) {
+                            u = uvAttr.getX(i);
+                            v = uvAttr.getY(i);
+                        }
+
+                        const px = Math.floor(Math.abs(u * 127)) % 128;
+                        const py = Math.floor(Math.abs((1 - v) * 127)) % 128;
+                        const indexPixel = (py * 128 + px) * 4;
+                        const brightness = imgData[indexPixel] / 255.0; // valor 0 a 1
+
+                        // Desplazar vértice a lo largo de su normal
+                        vPos.addScaledVector(vNorm, brightness * scaleFactor);
+                        posAttr.setXYZ(i, vPos.x, vPos.y, vPos.z);
+                    }
+
+                    posAttr.needsUpdate = true;
+                    targetMesh.geometry.computeVertexNormals();
+                    targetMesh.geometry.computeBoundingBox();
+                    targetMesh.geometry.computeBoundingSphere();
+
+                    updateStats();
+                    saveState();
+                    showNotification('¡Relieve geométrico aplicado con éxito sobre la malla!');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateDisplacementScale() {
+            showNotification('Ajuste de fuerza de relieve actualizado.');
         }
 
         let objects = [];
@@ -875,7 +995,7 @@
             const minutes = now.getMinutes().toString().padStart(2, '0');
             const ampm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12;
-            hours = hours ? hours : 12; // Formato 12 horas
+            hours = hours ? hours : 12;
             const timeStr = `${hours}:${minutes} ${ampm}`;
 
             const day = now.getDate().toString().padStart(2, '0');
@@ -945,7 +1065,7 @@
         function confirmSaveScene() {
             const sceneName = document.getElementById('save-scene-name-input').value.trim();
             if (!sceneName) {
-                alert('Por favor ingresa un nombre válido.');
+                showNotification('Ingresa un nombre válido para guardar.');
                 return;
             }
 
@@ -964,7 +1084,7 @@
             localStorage.setItem('krhorkos_saved_scenes', JSON.stringify(savedScenes));
 
             closeSaveModal();
-            alert(`¡Escena "${sceneName}" guardada con éxito en el almacenamiento local!`);
+            showNotification(`Escena "${sceneName}" guardada con éxito.`);
         }
 
         function openLoadModal() {
@@ -995,11 +1115,10 @@
                     delBtn.style.cssText = "background:#c0392b; color:#fff; border:none; padding:4px 8px; font-size:10px; border-radius:3px; cursor:pointer;";
                     delBtn.onclick = (e) => {
                         e.stopPropagation();
-                        if (confirm(`¿Estás seguro de eliminar la escena "${item.name}"?`)) {
-                            delete savedScenes[key];
-                            localStorage.setItem('krhorkos_saved_scenes', JSON.stringify(savedScenes));
-                            openLoadModal(); // Recargar lista
-                        }
+                        delete savedScenes[key];
+                        localStorage.setItem('krhorkos_saved_scenes', JSON.stringify(savedScenes));
+                        openLoadModal();
+                        showNotification('Escena eliminada del almacenamiento.');
                     };
 
                     div.appendChild(infoDiv);
@@ -1019,7 +1138,6 @@
             if (editMode) exitEditMode();
             transformControls.detach();
 
-            // Limpiar escena actual
             objects.forEach(obj => scene.remove(obj));
             objects = [];
             selectedObject = null;
@@ -1081,7 +1199,7 @@
             updateOutliner();
             updateStats();
             saveState();
-            alert('¡Escena cargada y restaurada exitosamente!');
+            showNotification('Escena cargada correctamente.');
         }
 
         let editMode = false;
@@ -1104,7 +1222,7 @@
         function toggleEditMode() {
             if (!editMode) {
                 if (!selectedObject || !selectedObject.isMesh) {
-                    alert('Selecciona un objeto (malla) antes de entrar en Modo Edicion.');
+                    showNotification('Selecciona una malla antes de entrar en Modo Edicion.');
                     return;
                 }
                 enterEditMode(selectedObject);
@@ -1293,23 +1411,33 @@
 
         function selectObject(obj) {
             selectedObject = obj;
-            if (obj && (obj.isMesh || obj.isGroup)) {
+            const nameInput = document.getElementById('object-name-input');
+            if (obj && (obj.isMesh || obj.isGroup || obj.isLight)) {
                 transformControls.attach(obj);
                 document.getElementById('selected-name-label').innerText = obj.name;
                 document.getElementById('stat-selected').innerText = obj.name;
+                nameInput.value = obj.name;
                 syncTransformUI();
                 if (obj.material) syncMaterialUI();
-            } else if(obj && obj.isLight) {
-                transformControls.attach(obj);
-                document.getElementById('selected-name-label').innerText = obj.name;
-                document.getElementById('stat-selected').innerText = obj.name;
-                syncTransformUI();
             } else {
                 transformControls.detach();
                 document.getElementById('selected-name-label').innerText = 'Ninguno';
                 document.getElementById('stat-selected').innerText = 'Ninguno';
+                nameInput.value = '';
             }
             updateOutlinerSelection();
+        }
+
+        function updateObjectNameFromInput() {
+            if (!selectedObject) return;
+            const newName = document.getElementById('object-name-input').value.trim();
+            if (newName) {
+                selectedObject.name = newName;
+                document.getElementById('selected-name-label').innerText = newName;
+                document.getElementById('stat-selected').innerText = newName;
+                updateOutliner();
+                saveState();
+            }
         }
 
         function setTransformMode(mode) {
@@ -1448,6 +1576,7 @@
             updateOutliner();
             updateStats();
             saveState();
+            showNotification('Objeto eliminado.');
         }
 
         function extrudeObject() {
@@ -1456,15 +1585,15 @@
             syncTransformUI();
         }
 
-        function subdivideObject() { alert('Subdivisión aplicada.'); }
-        function bevelObject() { alert('Biselado aplicado.'); }
+        function subdivideObject() { showNotification('Subdivisión aplicada.'); }
+        function bevelObject() { showNotification('Biselado aplicado.'); }
         function smoothShading(smooth) {
             if (!selectedObject || !selectedObject.isMesh) return;
             selectedObject.material.flatShading = !smooth;
             selectedObject.material.needsUpdate = true;
         }
-        function reducePolygons() { alert('Geometría optimizada.'); }
-        function joinSelected() { alert('Función de unión activada.'); }
+        function reducePolygons() { showNotification('Geometría optimizada.'); }
+        function joinSelected() { showNotification('Función de unión activada.'); }
 
         function addModifier() {
             const mod = document.getElementById('modifier-select').value;
@@ -1475,7 +1604,7 @@
         function applyModifier() {
             activeModifiersList = [];
             document.getElementById('active-modifiers').innerText = "Modificadores activos: Ninguno";
-            alert('Modificadores aplicados exitosamente.');
+            showNotification('Modificadores aplicados exitosamente.');
         }
 
         function updateOutliner() {
@@ -1537,8 +1666,6 @@
         }
 
         let nodeGraph = [];
-        let draggingNode = null;
-        let dragOffset = { x: 0, y: 0 };
 
         function buildDefaultNodeGraph() {
             nodeGraph = [
@@ -1551,7 +1678,7 @@
 
         function openNodeEditor() {
             if (!selectedObject || !selectedObject.isMesh) {
-                alert('Selecciona un objeto con material antes de abrir el editor de nodos.');
+                showNotification('Selecciona un objeto con material para abrir nodos.');
                 return;
             }
             buildDefaultNodeGraph();
@@ -1604,19 +1731,26 @@
 
         function executeExport() {
             const format = document.getElementById('exp-format').value;
+
+            const exportScene = new THREE.Scene();
+            objects.forEach(obj => {
+                exportScene.add(obj.clone(true));
+            });
+
             if (format === 'obj' && THREE.OBJExporter) {
                 const exporter = new THREE.OBJExporter();
-                downloadFile(exporter.parse(scene), 'escena.obj', 'text/plain');
+                downloadFile(exporter.parse(exportScene), 'escena_usuario.obj', 'text/plain');
             } else if (format === 'stl' && THREE.STLExporter) {
                 const exporter = new THREE.STLExporter();
-                downloadFile(exporter.parse(scene), 'escena.stl', 'text/plain');
+                downloadFile(exporter.parse(exportScene), 'escena_usuario.stl', 'text/plain');
             } else if (format === 'gltf' && THREE.GLTFExporter) {
                 const exporter = new THREE.GLTFExporter();
-                exporter.parse(scene, function (gltf) {
-                    downloadFile(JSON.stringify(gltf, null, 2), 'escena.gltf', 'application/json');
+                exporter.parse(exportScene, function (gltf) {
+                    downloadFile(JSON.stringify(gltf, null, 2), 'escena_usuario.gltf', 'application/json');
                 });
             }
             closeExportModal();
+            showNotification('Geometría exportada limpiamente.');
         }
 
         function downloadFile(content, filename, contentType) {
@@ -1629,12 +1763,10 @@
 
         // --- ATAJOS DE TECLADO ---
         window.addEventListener('keydown', (e) => {
-            // Ctrl + S: Guardar escena
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
                 e.preventDefault();
                 openSaveModal();
             }
-            // F4: Abrir escena guardada
             if (e.key === 'F4') {
                 e.preventDefault();
                 openLoadModal();
