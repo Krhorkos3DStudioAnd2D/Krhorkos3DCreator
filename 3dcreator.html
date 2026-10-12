@@ -380,6 +380,11 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/OBJExporter.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/STLExporter.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
+    <!-- Three.js Loaders para importación -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fflate@0.7.4/umd/index.min.js"></script>
 </head>
 <body class="theme-oscuro">
 
@@ -393,6 +398,19 @@
 
     <div id="main-layout">
         <div id="tools-panel" class="panel">
+            <div class="panel-title">Importar 3D</div>
+            <div class="panel-section">
+                <div style="position: relative; display: inline-block; width: 100%;">
+                    <button id="btn-import-menu" onclick="toggleImportMenu()" style="width: 100%; justify-content: center; background-color: var(--accent); color: #fff; font-weight: bold;">📁 Importar Modelo 3D</button>
+                    <div id="import-dropdown" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: var(--bg-panel); border: 1px solid var(--border); z-index: 50; border-radius: 3px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); margin-top: 2px;">
+                        <button onclick="triggerFileImport('fbx')" title="Formato muy usado en animaciones y modelos completos, soporta jerarquías y materiales" style="width: 100%; border: none; border-bottom: 1px solid var(--border); padding: 8px;">FBX</button>
+                        <button onclick="triggerFileImport('gltf')" title="Formato ligero y moderno, todo en un solo archivo, ideal para web y rendimiento" style="width: 100%; border: none; border-bottom: 1px solid var(--border); padding: 8px;">GLB / GLTF</button>
+                        <button onclick="triggerFileImport('obj')" title="Formato simple de modelos, geometría limpia, ideal para objetos sin animación" style="width: 100%; border: none; padding: 8px;">OBJ</button>
+                    </div>
+                </div>
+                <input type="file" id="hidden-file-input" style="display: none;" onchange="handleFileImport(event)">
+            </div>
+
             <div class="panel-title">Transformacion</div>
             <div class="panel-section">
                 <button id="btn-select" onclick="setTransformMode('select')">Seleccionar</button>
@@ -669,7 +687,6 @@
     </div>
 
     <script>
-        // --- INITIALIZATION ---
         const container = document.getElementById('viewport');
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x1e1e1e);
@@ -713,7 +730,115 @@
             if (selectedObject && !editMode) syncTransformUI();
         });
 
-        // --- GLOBAL STATE ---
+        // --- SISTEMA DE IMPORTACIÓN 3D ---
+        let currentImportFormat = '';
+
+        function toggleImportMenu() {
+            const dropdown = document.getElementById('import-dropdown');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Cerrar menú al hacer clic fuera
+        window.addEventListener('click', (e) => {
+            if (!e.target.closest('#btn-import-menu') && !e.target.closest('#import-dropdown')) {
+                document.getElementById('import-dropdown').style.display = 'none';
+            }
+        });
+
+        function triggerFileImport(format) {
+            currentImportFormat = format;
+            document.getElementById('import-dropdown').style.display = 'none';
+            const fileInput = document.getElementById('hidden-file-input');
+            
+            if (format === 'fbx') {
+                fileInput.accept = '.fbx';
+            } else if (format === 'gltf') {
+                fileInput.accept = '.gltf,.glb';
+            } else if (format === 'obj') {
+                fileInput.accept = '.obj';
+            }
+            fileInput.value = '';
+            fileInput.click();
+        }
+
+        function handleFileImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            const fileName = file.name;
+
+            if (currentImportFormat === 'obj') {
+                reader.onload = function (e) {
+                    try {
+                        const contents = e.target.result;
+                        const loader = new THREE.OBJLoader();
+                        const obj = loader.parse(contents);
+                        finalizeImportedObject(obj, fileName);
+                    } catch (err) {
+                        alert('Error al importar el archivo OBJ: Formato no válido o corrupto.');
+                        console.error(err);
+                    }
+                };
+                reader.readAsText(file);
+            } else if (currentImportFormat === 'gltf') {
+                reader.onload = function (e) {
+                    try {
+                        const contents = e.target.result;
+                        const loader = new THREE.GLTFLoader();
+                        loader.parse(contents, '', (gltf) => {
+                            finalizeImportedObject(gltf.scene, fileName);
+                        }, (error) => {
+                            alert('Error al importar GLTF/GLB: El archivo no es válido.');
+                            console.error(error);
+                        });
+                    } catch (err) {
+                        alert('Error al leer el archivo GLTF/GLB.');
+                        console.error(err);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            } else if (currentImportFormat === 'fbx') {
+                reader.onload = function (e) {
+                    try {
+                        const contents = e.target.result;
+                        const loader = new THREE.FBXLoader();
+                        const obj = loader.parse(contents, '');
+                        finalizeImportedObject(obj, fileName);
+                    } catch (err) {
+                        alert('Error al importar FBX: Asegúrate de que sea un archivo FBX compatible.');
+                        console.error(err);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+
+        function finalizeImportedObject(importedObj, fileName) {
+            objectCount++;
+            importedObj.name = fileName.substring(0, fileName.lastIndexOf('.')) || ('Modelo_' + objectCount);
+
+            // Asegurar sombras y materiales estándar si no tienen
+            importedObj.traverse((child) => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                    if (!child.material) {
+                        child.material = defaultGrayMaterial.clone();
+                    }
+                }
+            });
+
+            scene.add(importedObj);
+            objects.push(importedObj);
+            selectObject(importedObj);
+            updateOutliner();
+            updateStats();
+            saveState();
+
+            alert(`¡Modelo "${importedObj.name}" importado correctamente en pantalla!`);
+        }
+
         let objects = [];
         let selectedObject = null;
         let objectCount = 0;
@@ -772,9 +897,11 @@
                     else if (obj.geometry instanceof THREE.ConeGeometry) type = 'cone';
                     else if (obj.geometry instanceof THREE.TorusGeometry) type = 'torus';
                     else if (obj.geometry instanceof THREE.PlaneGeometry) type = 'plane';
+                    else type = 'imported';
                 } else if (obj.isPointLight) type = 'point';
                 else if (obj.isDirectionalLight) type = 'directional';
                 else if (obj.isSpotLight) type = 'spot';
+                else type = 'imported_group';
 
                 const mat = obj.material;
                 let matData = null;
@@ -957,7 +1084,6 @@
             alert('¡Escena cargada y restaurada exitosamente!');
         }
 
-        // --- EDIT MODE / VERTEX EDITING STATE ---
         let editMode = false;
         let editingObject = null;
         let vertexPoints = null;
@@ -1112,7 +1238,6 @@
             editingObject.geometry.computeBoundingSphere();
         }
 
-        // --- CORE FUNCTIONS ---
         function addPrimitive(type) {
             let geometry;
             objectCount++;
@@ -1168,12 +1293,12 @@
 
         function selectObject(obj) {
             selectedObject = obj;
-            if (obj && obj.isMesh) {
+            if (obj && (obj.isMesh || obj.isGroup)) {
                 transformControls.attach(obj);
                 document.getElementById('selected-name-label').innerText = obj.name;
                 document.getElementById('stat-selected').innerText = obj.name;
                 syncTransformUI();
-                syncMaterialUI();
+                if (obj.material) syncMaterialUI();
             } else if(obj && obj.isLight) {
                 transformControls.attach(obj);
                 document.getElementById('selected-name-label').innerText = obj.name;
@@ -1381,17 +1506,19 @@
             let totalFaces = 0;
 
             objects.forEach(obj => {
-                if (obj.isMesh && obj.geometry) {
-                    const geom = obj.geometry;
-                    if (geom.index) {
-                        totalFaces += geom.index.count / 3;
-                    } else if (geom.attributes.position) {
-                        totalFaces += geom.attributes.position.count / 3;
+                obj.traverse((child) => {
+                    if (child.isMesh && child.geometry) {
+                        const geom = child.geometry;
+                        if (geom.index) {
+                            totalFaces += geom.index.count / 3;
+                        } else if (geom.attributes.position) {
+                            totalFaces += geom.attributes.position.count / 3;
+                        }
+                        if (geom.attributes.position) {
+                            totalVerts += geom.attributes.position.count;
+                        }
                     }
-                    if (geom.attributes.position) {
-                        totalVerts += geom.attributes.position.count;
-                    }
-                }
+                });
             });
 
             document.getElementById('stat-verts').innerText = totalVerts;
@@ -1571,7 +1698,15 @@
             const intersects = raycaster.intersectObjects(objects, true);
 
             if (intersects.length > 0) {
-                selectObject(intersects[0].object);
+                let hitObj = intersects[0].object;
+                while (hitObj.parent && hitObj.parent !== scene && !objects.includes(hitObj)) {
+                    if (objects.includes(hitObj.parent)) {
+                        hitObj = hitObj.parent;
+                        break;
+                    }
+                    hitObj = hitObj.parent;
+                }
+                selectObject(hitObj);
             }
         });
 
