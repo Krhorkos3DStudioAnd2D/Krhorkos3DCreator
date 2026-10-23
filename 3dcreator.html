@@ -141,7 +141,7 @@
         }
 
         #tools-panel {
-            width: 220px;
+            width: 240px;
         }
 
         #viewport-container {
@@ -373,6 +373,41 @@
         .checkbox-group input {
             width: auto;
         }
+
+        .color-picker-modal {
+            display: none;
+            position: absolute;
+            background: #222;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+            z-index: 150;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.7);
+            width: 240px;
+        }
+        .color-picker-body {
+            display: flex;
+            gap: 10px;
+        }
+        #cp-palette {
+            width: 150px;
+            height: 150px;
+            cursor: crosshair;
+            border: 1px solid #444;
+        }
+        #cp-slider {
+            width: 20px;
+            height: 150px;
+            cursor: pointer;
+            border: 1px solid #444;
+        }
+        .color-preview-box {
+            width: 100%;
+            height: 25px;
+            margin-top: 8px;
+            border: 1px solid #444;
+            border-radius: 3px;
+        }
     </style>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -381,7 +416,6 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/OBJExporter.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/STLExporter.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
-    <!-- Loaders de Modelos 3D -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
@@ -423,17 +457,51 @@
                 </div>
             </div>
 
-            <div class="panel-title">Formas Primitivas</div>
+            <div class="panel-title">3D</div>
+            
             <div class="panel-section">
+                <div class="panel-section-title" style="margin-top:0;">Formas</div>
                 <div class="btn-grid">
                     <button onclick="addPrimitive('cube')">Cubo</button>
-                    <button onclick="addPrimitive('sphere')">Esfera</button>
-                    <button onclick="addPrimitive('icosphere')">Icosphere</button>
+                    <button onclick="addPrimitive('sphere')">Esfera / Icosaedro</button>
                     <button onclick="addPrimitive('cylinder')">Cilindro</button>
                     <button onclick="addPrimitive('cone')">Cono</button>
                     <button onclick="addPrimitive('torus')">Toro</button>
-                    <button onclick="addPrimitive('capsule')">Capsula</button>
+                    <button onclick="addPrimitive('capsule')">Cápsula</button>
                     <button onclick="addPrimitive('plane')">Plano</button>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-section-title" style="margin-top:0;">Iluminación</div>
+                <div class="btn-grid">
+                    <button onclick="addLight('point')">Luz Puntual</button>
+                    <button onclick="addLight('directional')">Luz Direccional</button>
+                    <button onclick="addLight('spot')">Luz de Cono</button>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-section-title" style="margin-top:0;">Texturas y Materiales</div>
+                <div class="input-group">
+                    <label style="font-size:11px;">Agregar textura</label>
+                    <input type="file" id="panel-texture-input" accept="image/*" onchange="applyTexture(event)" style="width: 120px; font-size: 10px;">
+                </div>
+                <div class="input-group">
+                    <label style="font-size:11px;">Agregar relieve</label>
+                    <input type="file" id="panel-normal-input" accept="image/*" onchange="applyNormalMap(event)" style="width: 120px; font-size: 10px;">
+                </div>
+                <div class="input-group" style="flex-direction:column; align-items:flex-start; margin-top:6px;">
+                    <label style="font-size:11px; margin-bottom:2px;">Int. Transparencia</label>
+                    <input type="range" id="panel-mat-opacity" min="0" max="1" step="0.05" value="1" oninput="updateMaterialFromPanel()" style="width:100%;">
+                </div>
+                <div class="input-group" style="flex-direction:column; align-items:flex-start; margin-top:6px;">
+                    <label style="font-size:11px; margin-bottom:2px;">Int. Emisión</label>
+                    <input type="range" id="panel-mat-emission-intensity" min="0" max="5" step="0.1" value="0" oninput="updateMaterialFromPanel()" style="width:100%;">
+                </div>
+                <div class="checkbox-group" style="margin-top:6px;">
+                    <input type="checkbox" id="emission-glow-check" onchange="updateMaterialFromPanel()">
+                    <label for="emission-glow-check">La emisión actúa como luz visual</label>
                 </div>
             </div>
 
@@ -448,15 +516,6 @@
                 <button onclick="reducePolygons()">Reducir Poligonos</button>
                 <button onclick="joinSelected()">Unir (Ctrl+J)</button>
                 <button onclick="deleteSelected()">Eliminar (Supr)</button>
-            </div>
-
-            <div class="panel-title">Iluminacion</div>
-            <div class="panel-section">
-                <div class="btn-grid">
-                    <button onclick="addLight('point')">Luz Puntual</button>
-                    <button onclick="addLight('directional')">Luz Solar</button>
-                    <button onclick="addLight('spot')">Foco (Spot)</button>
-                </div>
             </div>
         </div>
 
@@ -488,10 +547,10 @@
                 <ul id="outliner-list"></ul>
             </div>
 
-            <div class="panel-title">Nombre del Objeto</div>
+            <div class="panel-title">Nombre del Objeto / Luz</div>
             <div class="panel-section">
                 <div class="input-group">
-                    <input type="text" id="object-name-input" onchange="updateObjectNameFromInput()" style="width:100%;" placeholder="Selecciona una malla...">
+                    <input type="text" id="object-name-input" onchange="updateObjectNameFromInput()" style="width:100%;" placeholder="Selecciona un objeto o luz...">
                 </div>
             </div>
 
@@ -511,57 +570,10 @@
                 </div>
             </div>
 
-            <div class="panel-title">Materiales y Sombras</div>
-            <div class="panel-section">
-                <div class="input-group">
-                    <label>Color Base</label>
-                    <input type="color" id="mat-color" value="#888888" onchange="updateMaterial()">
+            <div id="dynamic-inspector-section">
+                <div class="panel-title" id="inspector-title-bar">Propiedades de Material</div>
+                <div class="panel-section" id="inspector-content-area">
                 </div>
-                <div class="input-group">
-                    <label>Rugosidad</label>
-                    <input type="range" id="mat-roughness" min="0" max="1" step="0.05" value="0.5" oninput="updateMaterial()">
-                </div>
-                <div class="input-group">
-                    <label>Metalico</label>
-                    <input type="range" id="mat-metalness" min="0" max="1" step="0.05" value="0.1" oninput="updateMaterial()">
-                </div>
-                <div class="input-group">
-                    <label>Emision</label>
-                    <input type="color" id="mat-emissive" value="#000000" onchange="updateMaterial()">
-                </div>
-                <div class="input-group">
-                    <label>Transparencia</label>
-                    <input type="range" id="mat-opacity" min="0" max="1" step="0.05" value="1" oninput="updateMaterial()">
-                </div>
-                <button style="width:100%; margin-top:4px;" onclick="openNodeEditor()">Editor de Nodos (F3)</button>
-            </div>
-
-            <div class="panel-title">Texturas y Relieve</div>
-            <div class="panel-section">
-                <div class="input-group">
-                    <label>Color / Textura</label>
-                    <input type="file" id="texture-input" accept="image/*" onchange="applyTexture(event)" style="width: 130px;">
-                </div>
-                <div class="input-group">
-                    <label>Mapa Normal (Relieve)</label>
-                    <input type="file" id="normal-input" accept="image/*" onchange="applyNormalMap(event)" style="width: 130px;">
-                </div>
-                <div class="input-group">
-                    <label>Intensidad Relieve</label>
-                    <input type="range" id="mat-normal-scale" min="0" max="3" step="0.05" value="1" oninput="updateNormalScale()">
-                </div>
-                <div class="modal-section-title" style="margin-top:8px;">Relieve Real de Malla (Displacement)</div>
-                <div class="input-group">
-                    <label>Imagen Altura</label>
-                    <input type="file" id="displacement-input" accept="image/*" onchange="applyRealDisplacement(event)" style="width: 130px;">
-                </div>
-                <div class="input-group">
-                    <label>Fuerza Relieve Geom.</label>
-                    <input type="range" id="displacement-scale" min="0" max="2" step="0.05" value="0.2" oninput="updateDisplacementScale()">
-                </div>
-                <button style="width:100%; margin-top:4px;" onclick="removeTexture()">Quitar Textura</button>
-                <button style="width:100%; margin-top:4px;" onclick="removeNormalMap()">Quitar Mapa Normal</button>
-                <div id="texture-preview">Sin Textura Asignada</div>
             </div>
 
             <div class="panel-title">Modificadores de Blender</div>
@@ -609,6 +621,18 @@
                 <button style="width:100%; text-align:center; justify-content:center;" onclick="openExportModal()">Exportar Archivo 3D</button>
             </div>
         </div>
+    </div>
+
+    <div id="advanced-color-picker" class="color-picker-modal">
+        <div style="font-size: 11px; font-weight: bold; color: var(--accent); margin-bottom: 6px; display:flex; justify-content:space-between;">
+            <span>Selector de Color de Luz</span>
+            <span onclick="closeColorPicker()" style="cursor:pointer; color:#aaa;">✕</span>
+        </div>
+        <div class="color-picker-body">
+            <canvas id="cp-palette" width="150" height="150"></canvas>
+            <canvas id="cp-slider" width="20" height="150"></canvas>
+        </div>
+        <div id="cp-preview" class="color-preview-box"></div>
     </div>
 
     <div id="status-bar">
@@ -763,6 +787,9 @@
             if (!e.target.closest('#btn-import-menu') && !e.target.closest('#import-dropdown')) {
                 document.getElementById('import-dropdown').style.display = 'none';
             }
+            if (!e.target.closest('#advanced-color-picker') && !e.target.closest('#btn-light-color')) {
+                document.getElementById('advanced-color-picker').style.display = 'none';
+            }
         });
 
         function triggerFileImport(format) {
@@ -876,89 +903,6 @@
             }
         }
 
-        function applyRealDisplacement(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            let targetMesh = null;
-            if (selectedObject) {
-                if (selectedObject.isMesh) targetMesh = selectedObject;
-                else {
-                    selectedObject.traverse(child => {
-                        if (!targetMesh && child.isMesh) targetMesh = child;
-                    });
-                }
-            }
-
-            if (!targetMesh) {
-                showNotification('Selecciona una malla válida antes de aplicar relieve geométrico.');
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvasImg = document.createElement('canvas');
-                    canvasImg.width = 128;
-                    canvasImg.height = 128;
-                    const ctx = canvasImg.getContext('2d');
-                    ctx.drawImage(img, 0, 0, 128, 128);
-                    const imgData = ctx.getImageData(0, 128, 128, 128).data; // simplificado mapa de altura
-
-                    // Clonar geometría para modificar vértices reales
-                    if (!targetMesh.geometry.isBufferGeometry) return;
-                    const geom = targetMesh.geometry.clone();
-                    targetMesh.geometry = geom;
-                    ensureGeometryDensity(targetMesh);
-
-                    const posAttr = targetMesh.geometry.attributes.position;
-                    const normAttr = targetMesh.geometry.attributes.normal;
-                    const uvAttr = targetMesh.geometry.attributes.uv;
-                    const scaleFactor = parseFloat(document.getElementById('displacement-scale').value) || 0.2;
-
-                    const vPos = new THREE.Vector3();
-                    const vNorm = new THREE.Vector3();
-
-                    for (let i = 0; i < posAttr.count; i++) {
-                        vPos.fromBufferAttribute(posAttr, i);
-                        if (normAttr) vNorm.fromBufferAttribute(normAttr, i);
-                        else vNorm.set(0, 1, 0);
-
-                        let u = 0.5, v = 0.5;
-                        if (uvAttr) {
-                            u = uvAttr.getX(i);
-                            v = uvAttr.getY(i);
-                        }
-
-                        const px = Math.floor(Math.abs(u * 127)) % 128;
-                        const py = Math.floor(Math.abs((1 - v) * 127)) % 128;
-                        const indexPixel = (py * 128 + px) * 4;
-                        const brightness = imgData[indexPixel] / 255.0; // valor 0 a 1
-
-                        // Desplazar vértice a lo largo de su normal
-                        vPos.addScaledVector(vNorm, brightness * scaleFactor);
-                        posAttr.setXYZ(i, vPos.x, vPos.y, vPos.z);
-                    }
-
-                    posAttr.needsUpdate = true;
-                    targetMesh.geometry.computeVertexNormals();
-                    targetMesh.geometry.computeBoundingBox();
-                    targetMesh.geometry.computeBoundingSphere();
-
-                    updateStats();
-                    saveState();
-                    showNotification('¡Relieve geométrico aplicado con éxito sobre la malla!');
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function updateDisplacementScale() {
-            showNotification('Ajuste de fuerza de relieve actualizado.');
-        }
-
         let objects = [];
         let selectedObject = null;
         let objectCount = 0;
@@ -988,7 +932,6 @@
             redoStack = [];
         }
 
-        // --- FUNCIONES DE GUARDADO Y CARGA (localStorage) ---
         function getFormattedDateTime() {
             const now = new Date();
             let hours = now.getHours();
@@ -1418,14 +1361,182 @@
                 document.getElementById('stat-selected').innerText = obj.name;
                 nameInput.value = obj.name;
                 syncTransformUI();
-                if (obj.material) syncMaterialUI();
+                buildInspectorForObject(obj);
             } else {
                 transformControls.detach();
                 document.getElementById('selected-name-label').innerText = 'Ninguno';
                 document.getElementById('stat-selected').innerText = 'Ninguno';
                 nameInput.value = '';
+                document.getElementById('inspector-title-bar').innerText = 'Propiedades';
+                document.getElementById('inspector-content-area').innerHTML = '<div style="color:#888; font-size:11px;">Selecciona un objeto o luz</div>';
             }
             updateOutlinerSelection();
+        }
+
+        function buildInspectorForObject(obj) {
+            const titleBar = document.getElementById('inspector-title-bar');
+            const contentArea = document.getElementById('inspector-content-area');
+            contentArea.innerHTML = '';
+
+            if (obj.isLight) {
+                titleBar.innerText = 'Propiedades de Luz';
+                
+                const intGroup = document.createElement('div');
+                intGroup.className = 'input-group';
+                intGroup.innerHTML = `<label>Intensidad</label><input type="range" id="light-intensity" min="0" max="5" step="0.1" value="${obj.intensity}" oninput="updateLightProperties()">`;
+                contentArea.appendChild(intGroup);
+
+                const colGroup = document.createElement('div');
+                colGroup.className = 'input-group';
+                colGroup.style.marginTop = '6px';
+                colGroup.innerHTML = `<label>Color de Luz</label><button id="btn-light-color" onclick="openColorPicker(event)" style="width:120px; height:24px; background:#ffffff; border:1px solid var(--border); padding:0; cursor:pointer;"></button>`;
+                contentArea.appendChild(colGroup);
+
+                setTimeout(() => {
+                    const hex = '#' + obj.color.getHexString();
+                    document.getElementById('btn-light-color').style.backgroundColor = hex;
+                    document.getElementById('btn-light-color').dataset.color = hex;
+                }, 10);
+
+            } else if (obj.isMesh) {
+                titleBar.innerText = 'Material y Sombreado';
+                const mat = obj.material;
+
+                contentArea.innerHTML = `
+                    <div class="input-group">
+                        <label>Color Base</label>
+                        <input type="color" id="mat-color" value="${mat.color ? '#' + mat.color.getHexString() : '#888888'}" onchange="updateMaterial()">
+                    </div>
+                    <div class="input-group">
+                        <label>Rugosidad</label>
+                        <input type="range" id="mat-roughness" min="0" max="1" step="0.05" value="${mat.roughness !== undefined ? mat.roughness : 0.5}" oninput="updateMaterial()">
+                    </div>
+                    <div class="input-group">
+                        <label>Metalico</label>
+                        <input type="range" id="mat-metalness" min="0" max="1" step="0.05" value="${mat.metalness !== undefined ? mat.metalness : 0.1}" oninput="updateMaterial()">
+                    </div>
+                    <div class="input-group">
+                        <label>Emision</label>
+                        <input type="color" id="mat-emissive" value="${mat.emissive ? '#' + mat.emissive.getHexString() : '#000000'}" onchange="updateMaterial()">
+                    </div>
+                    <div class="input-group">
+                        <label>Transparencia</label>
+                        <input type="range" id="mat-opacity" min="0" max="1" step="0.05" value="${mat.opacity !== undefined ? mat.opacity : 1}" oninput="updateMaterial()">
+                    </div>
+                    <button style="width:100%; margin-top:4px;" onclick="openNodeEditor()">Editor de Nodos (F3)</button>
+                `;
+            }
+        }
+
+        function updateLightProperties() {
+            if (!selectedObject || !selectedObject.isLight) return;
+            const intensity = parseFloat(document.getElementById('light-intensity').value) || 1;
+            selectedObject.intensity = intensity;
+        }
+
+        let cpColorHue = { r: 255, g: 255, b: 255 };
+        let cpBrightness = 1.0;
+
+        function openColorPicker(e) {
+            const picker = document.getElementById('advanced-color-picker');
+            const rect = e.target.getBoundingClientRect();
+            picker.style.display = 'block';
+            picker.style.top = (rect.bottom + window.scrollY + 5) + 'px';
+            picker.style.left = (rect.left + window.scrollX) + 'px';
+            initColorPickerCanvas();
+        }
+
+        function closeColorPicker() {
+            document.getElementById('advanced-color-picker').style.display = 'none';
+        }
+
+        function initColorPickerCanvas() {
+            const paletteCanvas = document.getElementById('cp-palette');
+            const pCtx = paletteCanvas.getContext('2d');
+            const gradH = pCtx.createLinearGradient(0, 0, paletteCanvas.width, 0);
+            gradH.addColorStop(0, '#ff0000');
+            gradH.addColorStop(0.17, '#ffff00');
+            gradH.addColorStop(0.33, '#00ff00');
+            gradH.addColorStop(0.5, '#00ffff');
+            gradH.addColorStop(0.67, '#0000ff');
+            gradH.addColorStop(0.83, '#ff00ff');
+            gradH.addColorStop(1, '#ff0000');
+            pCtx.fillStyle = gradH;
+            pCtx.fillRect(0, 0, paletteCanvas.width, paletteCanvas.height);
+
+            const gradV = pCtx.createLinearGradient(0, 0, 0, paletteCanvas.height);
+            gradV.addColorStop(0, 'rgba(255,255,255,1)');
+            gradV.addColorStop(0.5, 'rgba(255,255,255,0)');
+            gradV.addColorStop(1, 'rgba(0,0,0,1)');
+            pCtx.fillStyle = gradV;
+            pCtx.fillRect(0, 0, paletteCanvas.width, paletteCanvas.height);
+
+            const sliderCanvas = document.getElementById('cp-slider');
+            const sCtx = sliderCanvas.getContext('2d');
+            const sGrad = sCtx.createLinearGradient(0, 0, 0, sliderCanvas.height);
+            sGrad.addColorStop(0, '#ffffff'); 
+            sGrad.addColorStop(0.5, '#888888');
+            sGrad.addColorStop(1, '#000000'); 
+            sCtx.fillStyle = sGrad;
+            sCtx.fillRect(0, 0, sliderCanvas.width, sliderCanvas.height);
+        }
+
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'cp-palette') {
+                const rect = e.target.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const ctx = e.target.getContext('2d');
+                const pixel = ctx.getImageData(x, y, 1, 1).data;
+                cpColorHue = { r: pixel[0], g: pixel[1], b: pixel[2] };
+                applyAdvancedColor();
+            } else if (e.target.id === 'cp-slider') {
+                const rect = e.target.getBoundingClientRect();
+                const y = e.clientY - rect.top;
+                cpBrightness = 1.0 - (y / rect.height);
+                applyAdvancedColor();
+            }
+        });
+
+        function applyAdvancedColor() {
+            const r = Math.round(cpColorHue.r * cpBrightness);
+            const g = Math.round(cpColorHue.g * cpBrightness);
+            const b = Math.round(cpColorHue.b * cpBrightness);
+            const hex = '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+
+            const btn = document.getElementById('btn-light-color');
+            if (btn) btn.style.backgroundColor = hex;
+            document.getElementById('cp-preview').style.backgroundColor = hex;
+
+            if (selectedObject && selectedObject.isLight) {
+                selectedObject.color.set(hex);
+            }
+        }
+
+        function updateMaterialFromPanel() {
+            if (!selectedObject || !selectedObject.isMesh) return;
+            const mat = selectedObject.material;
+            const opacity = parseFloat(document.getElementById('panel-mat-opacity').value) || 1.0;
+            const emissionIntensity = parseFloat(document.getElementById('panel-mat-emission-intensity').value) || 0.0;
+            const glowActive = document.getElementById('emission-glow-check').checked;
+
+            mat.opacity = opacity;
+            mat.transparent = opacity < 1.0;
+
+            if (emissionIntensity > 0) {
+                mat.emissive.set(mat.color || 0xffffff);
+                mat.emissiveIntensity = emissionIntensity;
+            } else {
+                mat.emissive.set(0x000000);
+            }
+
+            if (glowActive && emissionIntensity > 0) {
+                selectedObject.layers.enable(1); 
+                mat.roughness = 0.1;
+            } else {
+                mat.roughness = 0.5;
+            }
+            mat.needsUpdate = true;
         }
 
         function updateObjectNameFromInput() {
@@ -1480,22 +1591,13 @@
             selectedObject.scale.z = parseFloat(document.getElementById('scale-z').value) || 1;
         }
 
-        function syncMaterialUI() {
-            if (!selectedObject || !selectedObject.material) return;
-            const mat = selectedObject.material;
-            if (mat.color) document.getElementById('mat-color').value = '#' + mat.color.getHexString();
-            if (mat.roughness !== undefined) document.getElementById('mat-roughness').value = mat.roughness;
-            if (mat.metalness !== undefined) document.getElementById('mat-metalness').value = mat.metalness;
-            if (mat.opacity !== undefined) document.getElementById('mat-opacity').value = mat.opacity;
-            if (mat.normalScale) document.getElementById('mat-normal-scale').value = mat.normalScale.x;
-        }
-
         function updateMaterial() {
-            if (!selectedObject || !selectedObject.material) return;
+            if (!selectedObject || !selectedObject.isMesh || !selectedObject.material) return;
             const mat = selectedObject.material;
             mat.color.set(document.getElementById('mat-color').value);
             mat.roughness = parseFloat(document.getElementById('mat-roughness').value);
             mat.metalness = parseFloat(document.getElementById('mat-metalness').value);
+            mat.emissive.set(document.getElementById('mat-emissive').value);
             mat.opacity = parseFloat(document.getElementById('mat-opacity').value);
             mat.transparent = mat.opacity < 1.0;
             mat.needsUpdate = true;
@@ -1503,7 +1605,7 @@
 
         function applyTexture(event) {
             const file = event.target.files[0];
-            if (!file || !selectedObject) return;
+            if (!file || !selectedObject || !selectedObject.isMesh) return;
             const reader = new FileReader();
             reader.onload = function(e) {
                 const loader = new THREE.TextureLoader();
@@ -1512,9 +1614,6 @@
                     texture.wrapT = THREE.RepeatWrapping;
                     selectedObject.material.map = texture;
                     selectedObject.material.needsUpdate = true;
-                    document.getElementById('texture-preview').style.backgroundImage = `url(${e.target.result})`;
-                    document.getElementById('texture-preview').innerText = '';
-                    ensureUVAndTangents(selectedObject);
                 });
             };
             reader.readAsDataURL(file);
@@ -1522,7 +1621,7 @@
 
         function applyNormalMap(event) {
             const file = event.target.files[0];
-            if (!file || !selectedObject || !selectedObject.material) return;
+            if (!file || !selectedObject || !selectedObject.isMesh || !selectedObject.material) return;
             const reader = new FileReader();
             reader.onload = function(e) {
                 const loader = new THREE.TextureLoader();
@@ -1531,38 +1630,11 @@
                     texture.wrapT = THREE.RepeatWrapping;
                     const mat = selectedObject.material;
                     mat.normalMap = texture;
-                    const s = parseFloat(document.getElementById('mat-normal-scale').value) || 1;
-                    mat.normalScale.set(s, s);
+                    mat.normalScale.set(1, 1);
                     mat.needsUpdate = true;
-                    ensureUVAndTangents(selectedObject);
                 });
             };
             reader.readAsDataURL(file);
-        }
-
-        function updateNormalScale() {
-            if (!selectedObject || !selectedObject.material || !selectedObject.material.normalMap) return;
-            const s = parseFloat(document.getElementById('mat-normal-scale').value) || 1;
-            selectedObject.material.normalScale.set(s, s);
-        }
-
-        function removeNormalMap() {
-            if (!selectedObject || !selectedObject.material) return;
-            selectedObject.material.normalMap = null;
-            selectedObject.material.needsUpdate = true;
-        }
-
-        function ensureUVAndTangents(mesh) {
-            if (!mesh.geometry.attributes.uv) return;
-            mesh.geometry.computeTangents();
-        }
-
-        function removeTexture() {
-            if (!selectedObject || !selectedObject.material) return;
-            selectedObject.material.map = null;
-            selectedObject.material.needsUpdate = true;
-            document.getElementById('texture-preview').style.backgroundImage = 'none';
-            document.getElementById('texture-preview').innerText = 'Sin Textura Asignada';
         }
 
         function deleteSelected() {
@@ -1712,181 +1784,4 @@
                 nodeCtx.fillRect(n.x, n.y, n.w, n.h);
                 nodeCtx.strokeRect(n.x, n.y, n.w, n.h);
                 nodeCtx.fillStyle = '#e67e22';
-                nodeCtx.font = 'bold 11px Segoe UI, sans-serif';
-                nodeCtx.fillText(n.title, n.x + 8, n.y + 14);
-            });
-        }
-
-        function liveApplySettings() {
-            const theme = document.getElementById('setting-theme').value;
-            document.body.className = 'theme-' + theme;
-        }
-
-        function saveSettings() {
-            document.getElementById('settings-modal').style.display = 'none';
-        }
-
-        function openExportModal() { document.getElementById('export-modal').style.display = 'flex'; }
-        function closeExportModal() { document.getElementById('export-modal').style.display = 'none'; }
-
-        function executeExport() {
-            const format = document.getElementById('exp-format').value;
-
-            const exportScene = new THREE.Scene();
-            objects.forEach(obj => {
-                exportScene.add(obj.clone(true));
-            });
-
-            if (format === 'obj' && THREE.OBJExporter) {
-                const exporter = new THREE.OBJExporter();
-                downloadFile(exporter.parse(exportScene), 'escena_usuario.obj', 'text/plain');
-            } else if (format === 'stl' && THREE.STLExporter) {
-                const exporter = new THREE.STLExporter();
-                downloadFile(exporter.parse(exportScene), 'escena_usuario.stl', 'text/plain');
-            } else if (format === 'gltf' && THREE.GLTFExporter) {
-                const exporter = new THREE.GLTFExporter();
-                exporter.parse(exportScene, function (gltf) {
-                    downloadFile(JSON.stringify(gltf, null, 2), 'escena_usuario.gltf', 'application/json');
-                });
-            }
-            closeExportModal();
-            showNotification('Geometría exportada limpiamente.');
-        }
-
-        function downloadFile(content, filename, contentType) {
-            const a = document.createElement('a');
-            const blob = new Blob([content], { type: contentType });
-            a.href = URL.createObjectURL(blob);
-            a.download = filename;
-            a.click();
-        }
-
-        // --- ATAJOS DE TECLADO ---
-        window.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-                e.preventDefault();
-                openSaveModal();
-            }
-            if (e.key === 'F4') {
-                e.preventDefault();
-                openLoadModal();
-            }
-            if (e.key === 'F1') {
-                e.preventDefault();
-                const modal = document.getElementById('settings-modal');
-                modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
-            }
-            if (e.key === 'F3') {
-                e.preventDefault();
-                nodeEditorOpen ? closeNodeEditor() : openNodeEditor();
-            }
-            if (e.key === 'Tab') {
-                e.preventDefault();
-                toggleEditMode();
-            }
-            if (editMode) return;
-            if (e.key === 'g' || e.key === 'G') setTransformMode('translate');
-            if (e.key === 'r' || e.key === 'R') setTransformMode('rotate');
-            if (e.key === 's' || e.key === 'S') setTransformMode('scale');
-            if (e.key === 'Delete') deleteSelected();
-        });
-
-        container.addEventListener('pointerdown', (e) => {
-            if (e.button !== 0) return;
-
-            if (editMode) {
-                const hitIndex = pickVertexAtScreen(e.clientX, e.clientY);
-                if (hitIndex !== null) {
-                    if (e.shiftKey) {
-                        const pos = selectedVertexIndices.indexOf(hitIndex);
-                        if (pos === -1) selectedVertexIndices.push(hitIndex);
-                        else selectedVertexIndices.splice(pos, 1);
-                    } else {
-                        selectedVertexIndices = [hitIndex];
-                    }
-                    isDraggingVertices = true;
-                    controls.enabled = false;
-                    const camDir = new THREE.Vector3();
-                    camera.getWorldDirection(camDir);
-                    vertexDragPlane.setFromNormalAndCoplanarPoint(camDir, editingObject.position);
-                    const ray = new THREE.Vector3();
-                    raycaster.setFromCamera(
-                        new THREE.Vector2(
-                            ((e.clientX - renderer.domElement.getBoundingClientRect().left) / renderer.domElement.clientWidth) * 2 - 1,
-                            -((e.clientY - renderer.domElement.getBoundingClientRect().top) / renderer.domElement.clientHeight) * 2 + 1
-                        ), camera);
-                    raycaster.ray.intersectPlane(vertexDragPlane, vertexDragStart);
-                } else {
-                    if (!e.shiftKey) selectedVertexIndices = [];
-                }
-                return;
-            }
-
-            const rect = renderer.domElement.getBoundingClientRect();
-            mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-            mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(objects, true);
-
-            if (intersects.length > 0) {
-                let hitObj = intersects[0].object;
-                while (hitObj.parent && hitObj.parent !== scene && !objects.includes(hitObj)) {
-                    if (objects.includes(hitObj.parent)) {
-                        hitObj = hitObj.parent;
-                        break;
-                    }
-                    hitObj = hitObj.parent;
-                }
-                selectObject(hitObj);
-            }
-        });
-
-        window.addEventListener('pointermove', (e) => {
-            if (!editMode || !isDraggingVertices || !editingObject) return;
-            const rect = renderer.domElement.getBoundingClientRect();
-            const ndc = new THREE.Vector2(
-                ((e.clientX - rect.left) / rect.width) * 2 - 1,
-                -((e.clientY - rect.top) / rect.height) * 2 + 1
-            );
-            raycaster.setFromCamera(ndc, camera);
-            const hitPoint = new THREE.Vector3();
-            if (raycaster.ray.intersectPlane(vertexDragPlane, hitPoint)) {
-                const delta = hitPoint.clone().sub(vertexDragStart);
-                vertexDragStart.copy(hitPoint);
-                moveSelectedVertices(delta);
-            }
-        });
-
-        window.addEventListener('pointerup', () => {
-            if (isDraggingVertices) {
-                isDraggingVertices = false;
-                controls.enabled = true;
-                updateStats();
-                saveState();
-            }
-        });
-
-        window.addEventListener('resize', () => {
-            camera.aspect = container.clientWidth / container.clientHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            resizeVertexOverlay();
-        });
-
-        function animate() {
-            requestAnimationFrame(animate);
-            controls.update();
-            if (editMode && editingObject) {
-                updateVertexPointSize();
-                drawVertexOverlay();
-            }
-            renderer.render(scene, camera);
-        }
-
-        resizeVertexOverlay();
-        addPrimitive('cube');
-        animate();
-    </script>
-</body>
-</html>
+                nodeCtx.font = 'bold 11
