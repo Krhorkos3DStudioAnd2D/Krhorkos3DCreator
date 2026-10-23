@@ -39,21 +39,21 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="text-xs text-zinc-400 block mb-1">Columnas</label>
-                        <input type="number" id="gridCols" min="1" max="16" value="4" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <input type="number" id="gridCols" min="1" max="16" value="4" oninput="updateGridConfig()" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
                         <label class="text-xs text-zinc-400 block mb-1">Filas</label>
-                        <input type="number" id="gridRows" min="1" max="16" value="4" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <input type="number" id="gridRows" min="1" max="16" value="4" oninput="updateGridConfig()" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="text-xs text-zinc-400 block mb-1">Ancho Celda (px)</label>
-                        <input type="number" id="cellWidth" min="16" max="1024" value="128" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <input type="number" id="cellWidth" min="16" max="1024" value="128" oninput="updateGridConfig()" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
                         <label class="text-xs text-zinc-400 block mb-1">Alto Celda (px)</label>
-                        <input type="number" id="cellHeight" min="16" max="1024" value="128" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <input type="number" id="cellHeight" min="16" max="1024" value="128" oninput="updateGridConfig()" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
             </div>
@@ -120,7 +120,7 @@
         <div class="flex-1 flex flex-col gap-6">
             <div class="bg-[#2b2b2b] border border-[#3f3f46] rounded-xl p-4 shadow-lg flex-1 flex flex-col min-h-[450px] relative overflow-hidden">
                 <div class="flex items-center justify-between mb-3 pb-2 border-b border-zinc-700">
-                    <span class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Área de Trabajo / Vista Previa</span>
+                    <span class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Área de Trabajo / Vista Previa (Ctrl + Clic izquierdo + Arrastrar para mover vista)</span>
                     <div class="flex items-center space-x-2">
                         <button onclick="zoomCanvas(0.1)" class="bg-zinc-700 hover:bg-zinc-600 text-xs px-2.5 py-1 rounded text-white font-bold">+</button>
                         <button onclick="resetZoom()" class="bg-zinc-700 hover:bg-zinc-600 text-xs px-2.5 py-1 rounded text-white">1:1</button>
@@ -180,12 +180,49 @@
 
         let initialPinchDistance = null;
 
+        let isPanning = false;
+        let panStartX = 0;
+        let panStartY = 0;
+        let containerScrollLeft = 0;
+        let containerScrollTop = 0;
+
         window.addEventListener('DOMContentLoaded', () => {
             updateGridConfig();
             setupPasteListener();
             setupTouchZoom();
             updateFilteringUI();
+            setupPanListener();
         });
+
+        function setupPanListener() {
+            container.addEventListener('mousedown', (e) => {
+                if (e.ctrlKey && e.button === 0) {
+                    isPanning = true;
+                    panStartX = e.clientX;
+                    panStartY = e.clientY;
+                    containerScrollLeft = container.scrollLeft;
+                    containerScrollTop = container.scrollTop;
+                    container.style.cursor = 'grab';
+                    e.preventDefault();
+                }
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isPanning) return;
+                const dx = e.clientX - panStartX;
+                const dy = e.clientY - panStartY;
+                container.scrollLeft = containerScrollLeft - dx;
+                container.scrollTop = containerScrollTop - dy;
+                container.style.cursor = 'grabbing';
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (isPanning) {
+                    isPanning = false;
+                    container.style.cursor = 'default';
+                }
+            });
+        }
 
         function setupPasteListener() {
             window.addEventListener('paste', (e) => {
