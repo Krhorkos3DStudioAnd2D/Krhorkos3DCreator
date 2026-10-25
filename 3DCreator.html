@@ -45,6 +45,10 @@
             user-select: none;
         }
 
+        input, textarea {
+            user-select: text;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-dark);
@@ -222,6 +226,29 @@
             color: #fff;
         }
 
+        #btn-grid-toggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            justify-content: center;
+            z-index: 6;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: #ffffff;
+        }
+
+        #btn-grid-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        #btn-grid-toggle svg {
+            width: 22px;
+            height: 22px;
+            display: block;
+        }
+
         .input-group {
             display: flex;
             align-items: center;
@@ -281,6 +308,18 @@
         #outliner-list li.selected {
             background: var(--accent);
             color: #fff;
+        }
+
+        #outliner-list li input.outliner-rename {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid var(--accent);
+            color: #ffffff;
+            padding: 1px 4px;
+            font-size: inherit;
+            font-family: inherit;
+            border-radius: 2px;
+            outline: none;
         }
 
         #status-bar {
@@ -381,7 +420,6 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/OBJExporter.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/STLExporter.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
-    <!-- Loaders de Modelos 3D -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
@@ -467,6 +505,20 @@
                 Edicion: <span id="edit-mode-label">Objeto</span>
             </div>
 
+            <button id="btn-grid-toggle" onclick="toggleGrid()" title="Mostrar / ocultar cuadrícula">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="3"></rect>
+                    <g id="grid-eye-open">
+                        <path d="M5 12c2-3.5 4.3-5 7-5s5 1.5 7 5c-2 3.5-4.3 5-7 5s-5-1.5-7-5z"></path>
+                        <circle cx="12" cy="12" r="2.2"></circle>
+                    </g>
+                    <g id="grid-eye-closed" style="display:none;">
+                        <path d="M5 10.5c2 3.5 4.3 5 7 5s5-1.5 7-5"></path>
+                        <path d="M8.2 14.6l-1.3 2M12 15.5v2.3M15.8 14.6l1.3 2"></path>
+                    </g>
+                </svg>
+            </button>
+
             <div id="scene-stats-panel">
                 <strong>Krhorkos3Dand2DCreator v1.0</strong><br>
                 • Seleccion: <span id="stat-selected">Ninguno</span><br>
@@ -547,6 +599,10 @@
                     <input type="file" id="normal-input" accept="image/*" onchange="applyNormalMap(event)" style="width: 130px;">
                 </div>
                 <div class="input-group">
+                    <label>Mapa de Altura (Bump)</label>
+                    <input type="file" id="bump-input" accept="image/*" onchange="applyBumpMap(event)" style="width: 130px;">
+                </div>
+                <div class="input-group">
                     <label>Intensidad Relieve</label>
                     <input type="range" id="mat-normal-scale" min="0" max="3" step="0.05" value="1" oninput="updateNormalScale()">
                 </div>
@@ -561,6 +617,7 @@
                 </div>
                 <button style="width:100%; margin-top:4px;" onclick="removeTexture()">Quitar Textura</button>
                 <button style="width:100%; margin-top:4px;" onclick="removeNormalMap()">Quitar Mapa Normal</button>
+                <button style="width:100%; margin-top:4px;" onclick="removeBumpMap()">Quitar Mapa de Altura</button>
                 <div id="texture-preview">Sin Textura Asignada</div>
             </div>
 
@@ -717,6 +774,7 @@
         camera.position.set(5, 4, 7);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
         renderer.setSize(container.clientWidth, container.clientHeight);
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -724,6 +782,25 @@
 
         const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
         scene.add(gridHelper);
+        gridHelper.position.set(0, 0, 0);
+        gridHelper.rotation.set(0, 0, 0);
+        gridHelper.scale.set(1, 1, 1);
+        gridHelper.updateMatrix();
+        gridHelper.matrixAutoUpdate = false;
+        gridHelper.frustumCulled = false;
+        gridHelper.renderOrder = -1;
+        gridHelper.raycast = function () {};
+        (Array.isArray(gridHelper.material) ? gridHelper.material : [gridHelper.material]).forEach(m => {
+            m.transparent = true;
+            m.depthWrite = false;
+        });
+
+        function toggleGrid() {
+            gridHelper.visible = !gridHelper.visible;
+            document.getElementById('grid-eye-open').style.display = gridHelper.visible ? '' : 'none';
+            document.getElementById('grid-eye-closed').style.display = gridHelper.visible ? 'none' : '';
+        }
+
         const originHelper = new THREE.AxesHelper(0.6);
         scene.add(originHelper);
 
@@ -904,9 +981,8 @@
                     canvasImg.height = 128;
                     const ctx = canvasImg.getContext('2d');
                     ctx.drawImage(img, 0, 0, 128, 128);
-                    const imgData = ctx.getImageData(0, 128, 128, 128).data; // simplificado mapa de altura
+                    const imgData = ctx.getImageData(0, 0, 128, 128).data;
 
-                    // Clonar geometría para modificar vértices reales
                     if (!targetMesh.geometry.isBufferGeometry) return;
                     const geom = targetMesh.geometry.clone();
                     targetMesh.geometry = geom;
@@ -934,9 +1010,8 @@
                         const px = Math.floor(Math.abs(u * 127)) % 128;
                         const py = Math.floor(Math.abs((1 - v) * 127)) % 128;
                         const indexPixel = (py * 128 + px) * 4;
-                        const brightness = imgData[indexPixel] / 255.0; // valor 0 a 1
+                        const brightness = imgData[indexPixel] / 255.0;
 
-                        // Desplazar vértice a lo largo de su normal
                         vPos.addScaledVector(vNorm, brightness * scaleFactor);
                         posAttr.setXYZ(i, vPos.x, vPos.y, vPos.z);
                     }
@@ -988,7 +1063,189 @@
             redoStack = [];
         }
 
-        // --- FUNCIONES DE GUARDADO Y CARGA (localStorage) ---
+        function createLightIcon(type) {
+            const size = 128;
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const g = canvas.getContext('2d');
+            g.translate(size / 2, size / 2);
+            g.lineCap = 'round';
+            g.lineJoin = 'round';
+            const dark = '#3a2a00';
+            const glow = '#ffd54a';
+
+            const drawRays = (cx, cy, r1, r2, angles) => {
+                angles.forEach(a => {
+                    const rad = a * Math.PI / 180;
+                    const x1 = cx + Math.cos(rad) * r1;
+                    const y1 = cy + Math.sin(rad) * r1;
+                    const x2 = cx + Math.cos(rad) * r2;
+                    const y2 = cy + Math.sin(rad) * r2;
+                    g.beginPath();
+                    g.moveTo(x1, y1);
+                    g.lineTo(x2, y2);
+                    g.strokeStyle = dark;
+                    g.lineWidth = 11;
+                    g.stroke();
+                    g.beginPath();
+                    g.moveTo(x1, y1);
+                    g.lineTo(x2, y2);
+                    g.strokeStyle = glow;
+                    g.lineWidth = 6;
+                    g.stroke();
+                });
+            };
+
+            if (type === 'directional') {
+                drawRays(0, 0, 32, 54, [0, 45, 90, 135, 180, 225, 270, 315]);
+                g.beginPath();
+                g.arc(0, 0, 22, 0, Math.PI * 2);
+                g.fillStyle = glow;
+                g.fill();
+                g.lineWidth = 5;
+                g.strokeStyle = dark;
+                g.stroke();
+            } else if (type === 'spot') {
+                g.beginPath();
+                g.moveTo(-30, -4);
+                g.lineTo(30, -4);
+                g.lineTo(50, 48);
+                g.lineTo(-50, 48);
+                g.closePath();
+                g.fillStyle = 'rgba(255, 213, 74, 0.6)';
+                g.fill();
+                g.lineWidth = 3;
+                g.strokeStyle = dark;
+                g.stroke();
+
+                g.beginPath();
+                g.moveTo(-18, -44);
+                g.lineTo(18, -44);
+                g.lineTo(30, -8);
+                g.lineTo(-30, -8);
+                g.closePath();
+                g.fillStyle = '#d5d9de';
+                g.fill();
+                g.lineWidth = 5;
+                g.strokeStyle = dark;
+                g.stroke();
+
+                g.beginPath();
+                g.ellipse(0, -8, 30, 8, 0, 0, Math.PI * 2);
+                g.fillStyle = glow;
+                g.fill();
+                g.lineWidth = 4;
+                g.stroke();
+
+                g.fillStyle = '#d5d9de';
+                g.fillRect(-6, -56, 12, 12);
+                g.lineWidth = 4;
+                g.strokeRect(-6, -56, 12, 12);
+            } else {
+                drawRays(0, -14, 31, 44, [-180, -140, -90, -40, 0]);
+                g.beginPath();
+                g.moveTo(-13, 6);
+                g.lineTo(-10, 26);
+                g.lineTo(10, 26);
+                g.lineTo(13, 6);
+                g.closePath();
+                g.fillStyle = glow;
+                g.fill();
+                g.lineWidth = 5;
+                g.strokeStyle = dark;
+                g.stroke();
+
+                g.beginPath();
+                g.arc(0, -14, 24, 0, Math.PI * 2);
+                g.fillStyle = glow;
+                g.fill();
+                g.stroke();
+
+                g.fillStyle = '#b0b6bc';
+                g.fillRect(-11, 26, 22, 9);
+                g.strokeRect(-11, 26, 22, 9);
+                g.fillRect(-8, 35, 16, 8);
+                g.strokeRect(-8, 35, 16, 8);
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const material = new THREE.SpriteMaterial({
+                map: texture,
+                transparent: true,
+                depthTest: false,
+                depthWrite: false
+            });
+            const sprite = new THREE.Sprite(material);
+            sprite.scale.set(0.8, 0.8, 1);
+            sprite.renderOrder = 999;
+            sprite.name = 'light-icon';
+            return sprite;
+        }
+
+        function buildLight(type) {
+            let light;
+            if (type === 'point') light = new THREE.PointLight(0xffffff, 1, 10);
+            else if (type === 'directional') light = new THREE.DirectionalLight(0xffffff, 1);
+            else light = new THREE.SpotLight(0xffffff, 1);
+
+            const icon = createLightIcon(type);
+            icon.userData.owner = light;
+            light.add(icon);
+            light.userData.icon = icon;
+            return light;
+        }
+
+        function linkLight(light, owner) {
+            if (!light || !owner || light === owner) return;
+            light.userData.linkedTo = owner;
+            if (!owner.userData.linkedLights) owner.userData.linkedLights = [];
+            if (owner.userData.linkedLights.indexOf(light) === -1) owner.userData.linkedLights.push(light);
+        }
+
+        function disposeMaterialFully(mat) {
+            if (!mat) return;
+            ['map', 'normalMap', 'bumpMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'alphaMap', 'aoMap', 'displacementMap', 'envMap', 'lightMap', 'specularMap'].forEach(key => {
+                if (mat[key] && mat[key].dispose) {
+                    mat[key].dispose();
+                    mat[key] = null;
+                }
+            });
+            if (mat.dispose) mat.dispose();
+        }
+
+        function disposeTree(root) {
+            root.traverse(child => {
+                if (child.isMesh || child.isLine || child.isPoints) {
+                    if (child.geometry) child.geometry.dispose();
+                    const mats = Array.isArray(child.material) ? child.material : [child.material];
+                    mats.forEach(m => disposeMaterialFully(m));
+                } else if (child.isSprite) {
+                    disposeMaterialFully(child.material);
+                }
+                if (child.isLight && child.shadow && child.shadow.map) {
+                    child.shadow.map.dispose();
+                }
+            });
+        }
+
+        function removeObjectFully(obj) {
+            if (!obj) return;
+            const linked = obj.userData && obj.userData.linkedLights ? obj.userData.linkedLights.slice() : [];
+            linked.forEach(l => removeObjectFully(l));
+            if (obj.userData) {
+                obj.userData.linkedLights = [];
+                const owner = obj.userData.linkedTo;
+                if (owner && owner.userData && owner.userData.linkedLights) {
+                    owner.userData.linkedLights = owner.userData.linkedLights.filter(l => l !== obj);
+                }
+                obj.userData.linkedTo = null;
+            }
+            if (obj.parent) obj.parent.remove(obj);
+            disposeTree(obj);
+            objects = objects.filter(o => o !== obj);
+        }
+
         function getFormattedDateTime() {
             const now = new Date();
             let hours = now.getHours();
@@ -1036,6 +1293,8 @@
                     };
                 }
 
+                const owner = obj.userData && obj.userData.linkedTo ? obj.userData.linkedTo : null;
+
                 return {
                     name: obj.name,
                     isMesh: !!obj.isMesh,
@@ -1044,7 +1303,8 @@
                     position: { x: obj.position.x, y: obj.position.y, z: obj.position.z },
                     rotation: { x: obj.rotation.x, y: obj.rotation.y, z: obj.rotation.z },
                     scale: { x: obj.scale.x, y: obj.scale.y, z: obj.scale.z },
-                    material: matData
+                    material: matData,
+                    linkedIndex: owner ? objects.indexOf(owner) : -1
                 };
             });
         }
@@ -1138,10 +1398,13 @@
             if (editMode) exitEditMode();
             transformControls.detach();
 
-            objects.forEach(obj => scene.remove(obj));
+            objects.slice().forEach(obj => removeObjectFully(obj));
             objects = [];
             selectedObject = null;
+            selectObject(null);
             objectCount = 0;
+
+            const created = [];
 
             sceneData.forEach(data => {
                 if (data.isMesh) {
@@ -1179,20 +1442,25 @@
 
                     scene.add(mesh);
                     objects.push(mesh);
+                    created.push(mesh);
                 } else if (data.isLight) {
-                    let light;
-                    if (data.type === 'point') light = new THREE.PointLight(0xffffff, 1, 10);
-                    else if (data.type === 'directional') light = new THREE.DirectionalLight(0xffffff, 1);
-                    else light = new THREE.SpotLight(0xffffff, 1);
+                    const light = buildLight(data.type);
 
                     light.name = data.name;
                     light.position.set(data.position.x, data.position.y, data.position.z);
                     scene.add(light);
-                    
-                    const helper = new THREE.PointLightHelper(light, 0.3);
-                    scene.add(helper);
 
                     objects.push(light);
+                    created.push(light);
+                } else {
+                    created.push(null);
+                }
+            });
+
+            sceneData.forEach((data, i) => {
+                if (data.isLight && typeof data.linkedIndex === 'number' && data.linkedIndex >= 0) {
+                    const owner = created[data.linkedIndex];
+                    if (owner && created[i]) linkLight(created[i], owner);
                 }
             });
 
@@ -1388,25 +1656,149 @@
         }
 
         function addLight(type) {
-            let light;
             objectCount++;
             let name = type + '_' + objectCount;
 
-            if(type === 'point') light = new THREE.PointLight(0xffffff, 1, 10);
-            else if(type === 'directional') light = new THREE.DirectionalLight(0xffffff, 1);
-            else light = new THREE.SpotLight(0xffffff, 1);
+            const light = buildLight(type);
 
             light.name = name;
             light.position.set(2, 4, 2);
             scene.add(light);
-            
-            const helper = new THREE.PointLightHelper(light, 0.3);
-            scene.add(helper);
+
+            if (selectedObject && !selectedObject.isLight) linkLight(light, selectedObject);
 
             objects.push(light);
             selectObject(light);
             updateOutliner();
             updateStats();
+        }
+
+        function collectMeshes(root) {
+            const list = [];
+            if (!root) return list;
+            root.traverse(c => {
+                if (c.isMesh) list.push(c);
+            });
+            return list;
+        }
+
+        function getMaterials(mesh) {
+            if (!mesh || !mesh.material) return [];
+            return (Array.isArray(mesh.material) ? mesh.material : [mesh.material]).filter(Boolean);
+        }
+
+        function ensureLitMaterial(mesh) {
+            const convert = (m) => {
+                if (m && (m.isMeshStandardMaterial || m.isMeshPhysicalMaterial || m.isMeshPhongMaterial)) return m;
+                const n = new THREE.MeshStandardMaterial({
+                    color: m && m.color ? m.color.clone() : new THREE.Color(0x909090),
+                    roughness: 0.5,
+                    metalness: 0.1
+                });
+                if (m) {
+                    if (m.map) n.map = m.map;
+                    n.opacity = m.opacity !== undefined ? m.opacity : 1;
+                    n.transparent = !!m.transparent;
+                    n.side = m.side;
+                }
+                return n;
+            };
+            if (Array.isArray(mesh.material)) mesh.material = mesh.material.map(convert);
+            else mesh.material = convert(mesh.material);
+        }
+
+        function ensureMeshUV(mesh) {
+            const geom = mesh.geometry;
+            if (!geom || !geom.attributes || !geom.attributes.position) return;
+            if (!geom.attributes.normal) geom.computeVertexNormals();
+            if (geom.attributes.uv) return;
+            geom.computeBoundingBox();
+            const bb = geom.boundingBox;
+            const sx = (bb.max.x - bb.min.x) || 1;
+            const sy = (bb.max.y - bb.min.y) || 1;
+            const pos = geom.attributes.position;
+            const uvs = new Float32Array(pos.count * 2);
+            for (let i = 0; i < pos.count; i++) {
+                uvs[i * 2] = (pos.getX(i) - bb.min.x) / sx;
+                uvs[i * 2 + 1] = (pos.getY(i) - bb.min.y) / sy;
+            }
+            geom.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+        }
+
+        function loadImageTexture(file, callback) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const dataUrl = e.target.result;
+                new THREE.TextureLoader().load(dataUrl, function(texture) {
+                    texture.wrapS = THREE.RepeatWrapping;
+                    texture.wrapT = THREE.RepeatWrapping;
+                    texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+                    texture.userData = texture.userData || {};
+                    texture.userData.previewUrl = dataUrl;
+                    callback(texture);
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function getIntensityValue() {
+            const raw = parseFloat(document.getElementById('mat-normal-scale').value);
+            return isNaN(raw) ? 1 : raw;
+        }
+
+        function refreshTexturePreview() {
+            const prev = document.getElementById('texture-preview');
+            let url = null;
+            collectMeshes(selectedObject).some(m => getMaterials(m).some(mat => {
+                if (mat.map && mat.map.userData && mat.map.userData.previewUrl) {
+                    url = mat.map.userData.previewUrl;
+                    return true;
+                }
+                return false;
+            }));
+            if (url) {
+                prev.style.backgroundImage = `url(${url})`;
+                prev.innerText = '';
+            } else {
+                prev.style.backgroundImage = 'none';
+                prev.innerText = 'Sin Textura Asignada';
+            }
+        }
+
+        function refreshTextureControls() {
+            ['texture-input', 'normal-input', 'bump-input'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            let found = null;
+            collectMeshes(selectedObject).some(m => getMaterials(m).some(mat => {
+                if (mat.normalMap && mat.normalScale) {
+                    found = mat.normalScale.x;
+                    return true;
+                }
+                if (mat.bumpMap) {
+                    found = mat.bumpScale;
+                    return true;
+                }
+                return false;
+            }));
+            if (found !== null && found !== undefined) document.getElementById('mat-normal-scale').value = found;
+            refreshTexturePreview();
+        }
+
+        function resetPropertiesPanel() {
+            ['pos-x', 'pos-y', 'pos-z', 'scale-x', 'scale-y', 'scale-z'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            document.getElementById('mat-color').value = '#888888';
+            document.getElementById('mat-roughness').value = 0.5;
+            document.getElementById('mat-metalness').value = 0.1;
+            document.getElementById('mat-emissive').value = '#000000';
+            document.getElementById('mat-opacity').value = 1;
+            document.getElementById('mat-normal-scale').value = 1;
+            ['texture-input', 'normal-input', 'bump-input'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            refreshTexturePreview();
         }
 
         function selectObject(obj) {
@@ -1419,11 +1811,13 @@
                 nameInput.value = obj.name;
                 syncTransformUI();
                 if (obj.material) syncMaterialUI();
+                refreshTextureControls();
             } else {
                 transformControls.detach();
                 document.getElementById('selected-name-label').innerText = 'Ninguno';
                 document.getElementById('stat-selected').innerText = 'Ninguno';
                 nameInput.value = '';
+                resetPropertiesPanel();
             }
             updateOutlinerSelection();
         }
@@ -1503,80 +1897,156 @@
 
         function applyTexture(event) {
             const file = event.target.files[0];
-            if (!file || !selectedObject) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const loader = new THREE.TextureLoader();
-                loader.load(e.target.result, function(texture) {
-                    texture.wrapS = THREE.RepeatWrapping;
-                    texture.wrapT = THREE.RepeatWrapping;
-                    selectedObject.material.map = texture;
-                    selectedObject.material.needsUpdate = true;
-                    document.getElementById('texture-preview').style.backgroundImage = `url(${e.target.result})`;
-                    document.getElementById('texture-preview').innerText = '';
-                    ensureUVAndTangents(selectedObject);
+            if (!file) return;
+            const target = selectedObject;
+            const meshes = collectMeshes(target);
+            if (!target || meshes.length === 0) {
+                showNotification('Selecciona un objeto con malla para asignarle la textura.');
+                event.target.value = '';
+                return;
+            }
+            loadImageTexture(file, function(texture) {
+                meshes.forEach(mesh => {
+                    ensureLitMaterial(mesh);
+                    ensureMeshUV(mesh);
+                    getMaterials(mesh).forEach(mat => {
+                        if (mat.userData.prevColor === undefined && mat.color) mat.userData.prevColor = mat.color.getHex();
+                        if (mat.map && mat.map !== texture) mat.map.dispose();
+                        mat.map = texture;
+                        if (mat.color) mat.color.set(0xffffff);
+                        mat.needsUpdate = true;
+                    });
                 });
-            };
-            reader.readAsDataURL(file);
+                if (selectedObject === target) {
+                    if (target.material) syncMaterialUI();
+                    refreshTexturePreview();
+                }
+                showNotification('Textura asignada correctamente.');
+            });
         }
 
         function applyNormalMap(event) {
             const file = event.target.files[0];
-            if (!file || !selectedObject || !selectedObject.material) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const loader = new THREE.TextureLoader();
-                loader.load(e.target.result, function(texture) {
-                    texture.wrapS = THREE.RepeatWrapping;
-                    texture.wrapT = THREE.RepeatWrapping;
-                    const mat = selectedObject.material;
-                    mat.normalMap = texture;
-                    const s = parseFloat(document.getElementById('mat-normal-scale').value) || 1;
-                    mat.normalScale.set(s, s);
-                    mat.needsUpdate = true;
-                    ensureUVAndTangents(selectedObject);
+            if (!file) return;
+            const target = selectedObject;
+            const meshes = collectMeshes(target);
+            if (!target || meshes.length === 0) {
+                showNotification('Selecciona un objeto con malla para asignarle el mapa normal.');
+                event.target.value = '';
+                return;
+            }
+            loadImageTexture(file, function(texture) {
+                const s = getIntensityValue();
+                meshes.forEach(mesh => {
+                    ensureLitMaterial(mesh);
+                    ensureMeshUV(mesh);
+                    getMaterials(mesh).forEach(mat => {
+                        if (mat.normalMap && mat.normalMap !== texture) mat.normalMap.dispose();
+                        mat.normalMap = texture;
+                        if (mat.normalScale) mat.normalScale.set(s, s);
+                        mat.needsUpdate = true;
+                    });
+                    ensureUVAndTangents(mesh);
                 });
-            };
-            reader.readAsDataURL(file);
+                showNotification('Mapa normal asignado correctamente.');
+            });
+        }
+
+        function applyBumpMap(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const target = selectedObject;
+            const meshes = collectMeshes(target);
+            if (!target || meshes.length === 0) {
+                showNotification('Selecciona un objeto con malla para asignarle el mapa de altura.');
+                event.target.value = '';
+                return;
+            }
+            loadImageTexture(file, function(texture) {
+                const s = getIntensityValue();
+                meshes.forEach(mesh => {
+                    ensureLitMaterial(mesh);
+                    ensureMeshUV(mesh);
+                    getMaterials(mesh).forEach(mat => {
+                        if (mat.bumpMap && mat.bumpMap !== texture) mat.bumpMap.dispose();
+                        mat.bumpMap = texture;
+                        mat.bumpScale = s;
+                        mat.needsUpdate = true;
+                    });
+                });
+                showNotification('Mapa de altura asignado correctamente.');
+            });
         }
 
         function updateNormalScale() {
-            if (!selectedObject || !selectedObject.material || !selectedObject.material.normalMap) return;
-            const s = parseFloat(document.getElementById('mat-normal-scale').value) || 1;
-            selectedObject.material.normalScale.set(s, s);
+            if (!selectedObject) return;
+            const s = getIntensityValue();
+            collectMeshes(selectedObject).forEach(mesh => {
+                getMaterials(mesh).forEach(mat => {
+                    if (mat.normalMap && mat.normalScale) mat.normalScale.set(s, s);
+                    if (mat.bumpMap) mat.bumpScale = s;
+                });
+            });
         }
 
         function removeNormalMap() {
-            if (!selectedObject || !selectedObject.material) return;
-            selectedObject.material.normalMap = null;
-            selectedObject.material.needsUpdate = true;
+            if (!selectedObject) return;
+            collectMeshes(selectedObject).forEach(mesh => {
+                getMaterials(mesh).forEach(mat => {
+                    mat.normalMap = null;
+                    mat.needsUpdate = true;
+                });
+            });
+        }
+
+        function removeBumpMap() {
+            if (!selectedObject) return;
+            collectMeshes(selectedObject).forEach(mesh => {
+                getMaterials(mesh).forEach(mat => {
+                    mat.bumpMap = null;
+                    mat.needsUpdate = true;
+                });
+            });
         }
 
         function ensureUVAndTangents(mesh) {
-            if (!mesh.geometry.attributes.uv) return;
-            mesh.geometry.computeTangents();
+            const geom = mesh.geometry;
+            if (!geom || !geom.attributes.uv || !geom.attributes.normal || !geom.index) return;
+            try {
+                geom.computeTangents();
+            } catch (err) {
+                return;
+            }
         }
 
         function removeTexture() {
-            if (!selectedObject || !selectedObject.material) return;
-            selectedObject.material.map = null;
-            selectedObject.material.needsUpdate = true;
-            document.getElementById('texture-preview').style.backgroundImage = 'none';
-            document.getElementById('texture-preview').innerText = 'Sin Textura Asignada';
+            if (!selectedObject) return;
+            collectMeshes(selectedObject).forEach(mesh => {
+                getMaterials(mesh).forEach(mat => {
+                    mat.map = null;
+                    if (mat.userData.prevColor !== undefined && mat.color) {
+                        mat.color.setHex(mat.userData.prevColor);
+                        delete mat.userData.prevColor;
+                    }
+                    mat.needsUpdate = true;
+                });
+            });
+            if (selectedObject.material) syncMaterialUI();
+            refreshTexturePreview();
         }
 
         function deleteSelected() {
             if (!selectedObject) return;
             if (editMode) exitEditMode();
             transformControls.detach();
-            scene.remove(selectedObject);
-            objects = objects.filter(o => o !== selectedObject);
+            const target = selectedObject;
             selectedObject = null;
+            removeObjectFully(target);
             selectObject(null);
             updateOutliner();
             updateStats();
             saveState();
-            showNotification('Objeto eliminado.');
+            showNotification('Objeto eliminado junto con sus luces, texturas y propiedades.');
         }
 
         function extrudeObject() {
@@ -1607,14 +2077,66 @@
             showNotification('Modificadores aplicados exitosamente.');
         }
 
+        function startOutlinerRename(li, obj) {
+            if (li.querySelector('input')) return;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'outliner-rename';
+            input.value = obj.name;
+            li.innerText = '';
+            li.appendChild(input);
+
+            let finished = false;
+            const finish = (commit) => {
+                if (finished) return;
+                finished = true;
+                if (commit) {
+                    const newName = input.value.trim();
+                    if (newName && newName !== obj.name) {
+                        obj.name = newName;
+                        if (selectedObject === obj) {
+                            document.getElementById('selected-name-label').innerText = newName;
+                            document.getElementById('stat-selected').innerText = newName;
+                            document.getElementById('object-name-input').value = newName;
+                        }
+                        saveState();
+                    }
+                }
+                updateOutliner();
+            };
+
+            input.addEventListener('keydown', (ev) => {
+                ev.stopPropagation();
+                if (ev.key === 'Enter') {
+                    ev.preventDefault();
+                    finish(true);
+                } else if (ev.key === 'Escape') {
+                    ev.preventDefault();
+                    finish(false);
+                }
+            });
+            input.addEventListener('blur', () => finish(true));
+            input.addEventListener('click', (ev) => ev.stopPropagation());
+            input.addEventListener('dblclick', (ev) => ev.stopPropagation());
+
+            input.focus();
+            input.select();
+        }
+
         function updateOutliner() {
             const list = document.getElementById('outliner-list');
             list.innerHTML = '';
             objects.forEach(obj => {
                 const li = document.createElement('li');
                 li.innerText = obj.name;
+                li._obj = obj;
+                if (obj.isLight && obj.userData.linkedTo) li.title = 'Luz vinculada a: ' + obj.userData.linkedTo.name;
                 if (selectedObject === obj) li.classList.add('selected');
                 li.onclick = () => selectObject(obj);
+                li.ondblclick = (e) => {
+                    e.preventDefault();
+                    startOutlinerRename(li, obj);
+                };
                 list.appendChild(li);
             });
         }
@@ -1622,7 +2144,7 @@
         function updateOutlinerSelection() {
             const items = document.querySelectorAll('#outliner-list li');
             items.forEach(li => {
-                if (selectedObject && li.innerText === selectedObject.name) {
+                if (selectedObject && li._obj === selectedObject) {
                     li.classList.add('selected');
                 } else {
                     li.classList.remove('selected');
@@ -1761,8 +2283,19 @@
             a.click();
         }
 
-        // --- ATAJOS DE TECLADO ---
+        function isTypingTarget(t) {
+            if (!t) return false;
+            if (t.tagName === 'TEXTAREA') return true;
+            if (t.isContentEditable) return true;
+            if (t.tagName === 'INPUT') {
+                const type = (t.type || 'text').toLowerCase();
+                return ['text', 'number', 'search', 'password', 'email', 'url', 'tel'].includes(type);
+            }
+            return false;
+        }
+
         window.addEventListener('keydown', (e) => {
+            const typing = isTypingTarget(e.target);
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
                 e.preventDefault();
                 openSaveModal();
@@ -1780,6 +2313,7 @@
                 e.preventDefault();
                 nodeEditorOpen ? closeNodeEditor() : openNodeEditor();
             }
+            if (typing) return;
             if (e.key === 'Tab') {
                 e.preventDefault();
                 toggleEditMode();
@@ -1827,6 +2361,16 @@
             mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
             raycaster.setFromCamera(mouse, camera);
+
+            const lightSprites = objects.filter(o => o.isLight && o.userData.icon).map(o => o.userData.icon);
+            if (lightSprites.length > 0) {
+                const iconHits = raycaster.intersectObjects(lightSprites, false);
+                if (iconHits.length > 0 && iconHits[0].object.userData.owner) {
+                    selectObject(iconHits[0].object.userData.owner);
+                    return;
+                }
+            }
+
             const intersects = raycaster.intersectObjects(objects, true);
 
             if (intersects.length > 0) {
