@@ -12,6 +12,42 @@
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #2b2b2b; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+        
+        .win-modal {
+            background-color: #c0c0c0;
+            border: 2px solid #ffffff;
+            border-right-color: #000000;
+            border-bottom-color: #000000;
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.5);
+            color: #000;
+            font-family: 'Tahoma', 'Segoe UI', sans-serif;
+        }
+        .win-titlebar {
+            background: linear-gradient(90deg, #000080, #1084d0);
+            color: white;
+            padding: 3px 6px;
+            font-weight: bold;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .win-btn {
+            background-color: #c0c0c0;
+            border: 2px solid #ffffff;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #000;
+            cursor: pointer;
+        }
+        .win-btn:active {
+            border: 2px solid #404040;
+            border-right-color: #ffffff;
+            border-bottom-color: #ffffff;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -24,7 +60,7 @@
             </div>
             <div>
                 <h1 class="text-lg font-bold text-white">Editor de Imágenes y Atlas de Texturas</h1>
-                <p class="text-xs text-zinc-400">Diseña, organiza y exporta tus atlas de sprites fácilmente</p>
+                <p class="text-xs text-indigo-400 font-semibold">Herramienta de Krhorkos3DStudioAnd2D</p>
             </div>
         </div>
         <div class="flex items-center space-x-3">
@@ -33,94 +69,10 @@
     </header>
 
     <main class="flex-1 flex flex-col lg:flex-row p-6 gap-6 max-w-[1600px] w-full mx-auto">
-        <aside class="w-full lg:w-80 flex flex-col gap-6">
-            <div class="bg-[#2b2b2b] border border-[#3f3f46] rounded-xl p-5 shadow-lg flex flex-col gap-4">
-                <h2 class="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Configuración de Grilla</h2>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-xs text-zinc-400 block mb-1">Columnas</label>
-                        <input type="number" id="gridCols" min="1" max="16" value="4" oninput="updateGridConfig()" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
-                    </div>
-                    <div>
-                        <label class="text-xs text-zinc-400 block mb-1">Filas</label>
-                        <input type="number" id="gridRows" min="1" max="16" value="4" oninput="updateGridConfig()" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-xs text-zinc-400 block mb-1">Ancho Celda (px)</label>
-                        <input type="number" id="cellWidth" min="16" max="1024" value="128" oninput="updateGridConfig()" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
-                    </div>
-                    <div>
-                        <label class="text-xs text-zinc-400 block mb-1">Alto Celda (px)</label>
-                        <input type="number" id="cellHeight" min="16" max="1024" value="128" oninput="updateGridConfig()" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-[#2b2b2b] border border-[#3f3f46] rounded-xl p-5 shadow-lg flex flex-col gap-4">
-                <h2 class="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Cargar Texturas</h2>
-                <div class="border-2 border-dashed border-zinc-600 rounded-xl p-6 text-center hover:border-indigo-500 transition cursor-pointer relative" onclick="document.getElementById('fileInput').click()">
-                    <input type="file" id="fileInput" multiple accept="image/*" class="hidden" onchange="handleFiles(this.files)">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-zinc-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    <p class="text-xs text-zinc-300 font-medium">Haz clic para subir o arrastra imágenes aquí</p>
-                    <p class="text-[10px] text-zinc-500 mt-1">También puedes presionar Ctrl+V para pegar</p>
-                </div>
-            </div>
-
-            <div class="bg-[#2b2b2b] border border-[#3f3f46] rounded-xl p-5 shadow-lg flex flex-col gap-4">
-                <h2 class="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Opciones de Exportación</h2>
-                <div>
-                    <label class="text-xs text-zinc-400 block mb-1">Formato</label>
-                    <select id="exportFormat" onchange="updateStats()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
-                        <option value="image/png">PNG</option>
-                        <option value="image/jpeg">JPEG</option>
-                        <option value="image/webp">WebP</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-xs text-zinc-400 block mb-1">Calidad (<span id="qualityVal">90</span>%)</label>
-                    <input type="range" id="exportQuality" min="10" max="100" value="90" oninput="document.getElementById('qualityVal').innerText=this.value; updateStats();" class="w-full accent-indigo-600">
-                </div>
-                <div>
-                    <label class="text-xs text-zinc-400 block mb-1">Escala</label>
-                    <select id="exportScale" onchange="updateStats()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
-                        <option value="1">1x (Original)</option>
-                        <option value="0.5">0.5x (Mitad)</option>
-                        <option value="2">2x (Doble)</option>
-                    </select>
-                </div>
-
-                <div class="pt-2 border-t border-zinc-700 flex flex-col gap-3">
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="text-xs text-zinc-400">Nivel de Calidad / Resolución</label>
-                            <span id="qualitySliderVal" class="text-xs font-bold text-[#e67e22]">100%</span>
-                        </div>
-                        <input type="range" id="qualitySlider" min="25" max="200" value="100" step="25" oninput="onQualitySliderChange(this.value)" class="w-full accent-[#e67e22]">
-                        <div class="flex justify-between text-[9px] text-zinc-500 mt-1">
-                            <span>Mínima / Ligera</span>
-                            <span>Equilibrada</span>
-                            <span>Máxima / Nítida</span>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-xs text-zinc-400 block mb-1">Modo de Visualización</label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button type="button" id="btnBlur" onclick="setFiltering('blur')" class="bg-zinc-700 text-zinc-300 text-xs py-1.5 rounded font-medium transition border border-zinc-600">BORROSA</button>
-                            <button type="button" id="btnPixel" onclick="setFiltering('pixel')" class="bg-[#e67e22] text-white text-xs py-1.5 rounded font-medium transition border border-[#d35400]">PIXELEADA</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </aside>
-
         <div class="flex-1 flex flex-col gap-6">
             <div class="bg-[#2b2b2b] border border-[#3f3f46] rounded-xl p-4 shadow-lg flex-1 flex flex-col min-h-[450px] relative overflow-hidden">
                 <div class="flex items-center justify-between mb-3 pb-2 border-b border-zinc-700">
-                    <span class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Área de Trabajo / Vista Previa (Ctrl + Clic izquierdo + Arrastrar para mover vista)</span>
+                    <span class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Área de Trabajo / Vista Previa</span>
                     <div class="flex items-center space-x-2">
                         <button onclick="zoomCanvas(0.1)" class="bg-zinc-700 hover:bg-zinc-600 text-xs px-2.5 py-1 rounded text-white font-bold">+</button>
                         <button onclick="resetZoom()" class="bg-zinc-700 hover:bg-zinc-600 text-xs px-2.5 py-1 rounded text-white">1:1</button>
@@ -152,17 +104,248 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="flex justify-end gap-3">
-                <button onclick="exportAtlas()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-6 py-3 rounded-xl shadow-lg transition text-sm flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        <aside class="w-full lg:w-80 flex flex-col gap-6">
+            <div class="bg-[#2b2b2b] border border-[#3f3f46] rounded-xl p-5 shadow-lg flex flex-col gap-4">
+                <h2 class="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Configuración de Grilla</h2>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-xs text-zinc-400 block mb-1">Columnas</label>
+                        <input type="number" id="gridCols" min="1" max="16" value="4" oninput="updateGridConfig()" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="text-xs text-zinc-400 block mb-1">Filas</label>
+                        <input type="number" id="gridRows" min="1" max="16" value="4" oninput="updateGridConfig()" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-xs text-zinc-400 block mb-1">Ancho Celda (px)</label>
+                        <input type="number" id="cellWidth" min="16" max="1024" value="128" oninput="updateGridConfig()" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="text-xs text-zinc-400 block mb-1">Alto Celda (px)</label>
+                        <input type="number" id="cellHeight" min="16" max="1024" value="128" oninput="updateGridConfig()" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-[#2b2b2b] border border-[#3f3f46] rounded-xl p-5 shadow-lg flex flex-col gap-4">
+                <h2 class="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Importar Imágenes</h2>
+                <button onclick="document.getElementById('fileInput').click()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-lg transition text-xs flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
-                    Exportar Atlas de Texturas
+                    Cargar / Subir Imágenes
+                </button>
+                <input type="file" id="fileInput" multiple accept="image/*" class="hidden" onchange="handleFiles(this.files)">
+            </div>
+
+            <div class="bg-[#2b2b2b] border border-[#3f3f46] rounded-xl p-5 shadow-lg flex flex-col gap-4">
+                <h2 class="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Filtros y Efectos</h2>
+                <button onclick="openFilterWindow()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-medium py-2 rounded-lg transition text-xs flex items-center justify-center gap-2">
+                    🎛️ Abrir Ventana de Filtros
                 </button>
             </div>
-        </div>
+
+            <div class="bg-[#2b2b2b] border border-[#3f3f46] rounded-xl p-5 shadow-lg flex flex-col gap-4">
+                <h2 class="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Gestión de Proyectos</h2>
+                <div class="flex flex-col gap-2">
+                    <button onclick="openSaveModal()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-medium py-2 rounded-lg transition text-xs flex items-center justify-center gap-2">
+                        💾 Guardar Proyecto
+                    </button>
+                    <button onclick="openLoadModal()" class="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-medium py-2 rounded-lg transition text-xs flex items-center justify-center gap-2">
+                        📂 Cargar Proyecto
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-[#2b2b2b] border border-[#3f3f46] rounded-xl p-5 shadow-lg flex flex-col gap-4">
+                <h2 class="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Información</h2>
+                <button onclick="openShortcutsWindow()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 rounded-lg transition text-xs flex items-center justify-center gap-2">
+                    ⌨️ Atajos
+                </button>
+            </div>
+
+            <div class="bg-[#2b2b2b] border border-[#3f3f46] rounded-xl p-5 shadow-lg flex flex-col gap-4">
+                <h2 class="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Opciones de Exportación</h2>
+                <div>
+                    <label class="text-xs text-zinc-400 block mb-1">Formato</label>
+                    <select id="exportFormat" onchange="updateStats()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <option value="image/png">PNG</option>
+                        <option value="image/jpeg">JPEG</option>
+                        <option value="image/webp">WebP</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-zinc-400 block mb-1">Calidad (<span id="qualityVal">90</span>%)</label>
+                    <input type="range" id="exportQuality" min="10" max="100" value="90" oninput="document.getElementById('qualityVal').innerText=this.value; updateStats();" class="w-full accent-indigo-600">
+                </div>
+                <div>
+                    <label class="text-xs text-zinc-400 block mb-1">Escala</label>
+                    <select id="exportScale" onchange="updateStats()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <option value="1">1x (Original)</option>
+                        <option value="0.5">0.5x (Mitad)</option>
+                        <option value="2">2x (Doble)</option>
+                    </select>
+                </div>
+
+                <button onclick="exportAtlas()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-3 rounded-xl shadow-lg transition text-xs flex items-center justify-center gap-2 mt-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Exportar Imagen
+                </button>
+            </div>
+        </aside>
     </main>
+
+    <div id="filterWin" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="win-modal w-80 p-1">
+            <div class="win-titlebar">
+                <span>Filtros.exe</span>
+                <button onclick="closeFilterWindow()" class="win-btn px-1 py-0 text-[9px]">X</button>
+            </div>
+            <div class="p-4 flex flex-col gap-3">
+                <p class="text-xs font-semibold mb-1">Seleccione los efectos a aplicar sobre el Grid:</p>
+                
+                <div class="flex items-center justify-between bg-gray-200 p-2 border border-gray-400">
+                    <span class="text-xs font-bold">Escala de Grises</span>
+                    <button id="btnGrayscaleToggle" onclick="toggleGrayscale()" class="px-3 py-1 text-xs font-bold text-white bg-gray-500 rounded border border-black transition">
+                        OFF
+                    </button>
+                </div>
+
+                <div class="flex items-center justify-between bg-gray-200 p-2 border border-gray-400">
+                    <span class="text-xs font-bold">Invertir Colores</span>
+                    <button id="btnInvertToggle" onclick="toggleInvert()" class="px-3 py-1 text-xs font-bold text-white bg-gray-500 rounded border border-black transition">
+                        OFF
+                    </button>
+                </div>
+
+                <div class="flex items-center justify-between bg-gray-200 p-2 border border-gray-400">
+                    <span class="text-xs font-bold">Estilo Boceto</span>
+                    <button id="btnSketchToggle" onclick="toggleSketch()" class="px-3 py-1 text-xs font-bold text-white bg-gray-500 rounded border border-black transition">
+                        OFF
+                    </button>
+                </div>
+
+                <div class="flex flex-col gap-2 bg-gray-200 p-2 border border-gray-400">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold">Borroso</span>
+                        <button id="btnBlurToggle" onclick="toggleBlur()" class="px-3 py-1 text-xs font-bold text-white bg-gray-500 rounded border border-black transition">
+                            OFF
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[11px] font-bold">Intensidad:</span>
+                        <input type="range" id="blurIntensity" min="1" max="30" value="4" oninput="setBlurIntensity(this.value)" class="flex-1">
+                        <span id="blurIntensityVal" class="text-[11px] font-bold w-8 text-right">4</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2 bg-gray-200 p-2 border border-gray-400">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold">Pixeleado</span>
+                        <button id="btnPixelToggle" onclick="togglePixel()" class="px-3 py-1 text-xs font-bold text-white bg-gray-500 rounded border border-black transition">
+                            OFF
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[11px] font-bold">Intensidad:</span>
+                        <input type="range" id="pixelIntensity" min="2" max="64" value="8" oninput="setPixelIntensity(this.value)" class="flex-1">
+                        <span id="pixelIntensityVal" class="text-[11px] font-bold w-8 text-right">8</span>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-gray-400 mt-2">
+                    <button onclick="closeFilterWindow()" class="win-btn">Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="shortcutsWin" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="win-modal w-80 p-1">
+            <div class="win-titlebar">
+                <span>Atajos.exe</span>
+                <button onclick="closeShortcutsWindow()" class="win-btn px-1 py-0 text-[9px]">X</button>
+            </div>
+            <div class="p-4 flex flex-col gap-3">
+                <p class="text-xs font-semibold mb-1">Atajos del sistema:</p>
+                
+                <div class="flex flex-col gap-2 bg-gray-200 p-3 border border-gray-400 text-xs">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold">Ctrl + Z</span>
+                        <span>Deshacer</span>
+                    </div>
+                    <div class="flex justify-between items-center border-t border-gray-300 pt-2">
+                        <span class="font-bold">Ctrl + Shift + Z</span>
+                        <span>Rehacer</span>
+                    </div>
+                    <div class="flex justify-between items-center border-t border-gray-300 pt-2">
+                        <span class="font-bold">Ctrl + S</span>
+                        <span>Guardar proyecto</span>
+                    </div>
+                    <div class="flex justify-between items-center border-t border-gray-300 pt-2">
+                        <span class="font-bold">Ctrl + Shift + S</span>
+                        <span>Cargar última sesión</span>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-gray-400 mt-2">
+                    <button onclick="closeShortcutsWindow()" class="win-btn">Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="saveModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="win-modal w-80 p-1">
+            <div class="win-titlebar">
+                <span>Guardar_Proyecto.exe</span>
+                <button onclick="closeSaveModal()" class="win-btn px-1 py-0 text-[9px]">X</button>
+            </div>
+            <div class="p-4 flex flex-col gap-3 text-xs">
+                <div>
+                    <label class="block font-bold mb-1">Nombre del archivo:</label>
+                    <input type="text" id="saveProjectName" value="proyecto_atlas" class="w-full bg-white border border-gray-600 px-2 py-1 text-black font-sans">
+                </div>
+                <div class="bg-gray-200 p-2 border border-gray-400 flex flex-col gap-1">
+                    <span><strong>Peso estimado:</strong> <span id="modalSaveWeight">0 B</span></span>
+                    <span><strong>Última edición:</strong> <span id="modalSaveDate">-</span></span>
+                </div>
+                <div class="flex justify-end gap-2 pt-2 border-t border-gray-400 mt-2">
+                    <button onclick="confirmSaveProject()" class="win-btn">Guardar</button>
+                    <button onclick="closeSaveModal()" class="win-btn">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="win-modal w-90 p-1">
+            <div class="win-titlebar">
+                <span>Cargar_Proyecto.exe</span>
+                <button onclick="closeLoadModal()" class="win-btn px-1 py-0 text-[9px]">X</button>
+            </div>
+            <div class="p-4 flex flex-col gap-3 text-xs">
+                <label class="block font-bold">Seleccionar proyecto guardado:</label>
+                <div id="projectListContainer" class="bg-white border border-gray-600 h-32 overflow-y-auto text-black p-1 flex flex-col gap-1">
+                </div>
+                <div class="bg-gray-200 p-2 border border-gray-400 flex flex-col gap-1">
+                    <span><strong>Nombre:</strong> <span id="modalLoadName">-</span></span>
+                    <span><strong>Peso:</strong> <span id="modalLoadWeight">-</span></span>
+                    <span><strong>Fecha:</strong> <span id="modalLoadDate">-</span></span>
+                </div>
+                <div class="flex justify-end gap-2 pt-2 border-t border-gray-400 mt-2">
+                    <button onclick="confirmLoadProject()" class="win-btn">Cargar</button>
+                    <button onclick="closeLoadModal()" class="win-btn">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         let gridCols = 4;
@@ -173,13 +356,24 @@
         let currentZoom = 1;
         let qualityMultiplier = 1.0;
         let filteringMode = 'pixel';
+        
+        let isGrayscaleActive = false;
+        let isInvertActive = false;
+        let isSketchActive = false;
+        let isBlurActive = false;
+        let isPixelActive = false;
+        let blurIntensity = 4;
+        let pixelIntensity = 8;
+        let lastEditDate = new Date().toLocaleString();
+
+        let historyStack = [];
+        let redoStack = [];
 
         const canvas = document.getElementById('atlasCanvas');
         const ctx = canvas.getContext('2d');
         const container = document.getElementById('canvasContainer');
 
         let initialPinchDistance = null;
-
         let isPanning = false;
         let panStartX = 0;
         let panStartY = 0;
@@ -190,9 +384,331 @@
             updateGridConfig();
             setupPasteListener();
             setupTouchZoom();
-            updateFilteringUI();
             setupPanListener();
+            setupKeyboardShortcuts();
         });
+
+        function saveState() {
+            historyStack.push(JSON.parse(JSON.stringify(getTextureKeys())));
+            redoStack = [];
+            lastEditDate = new Date().toLocaleString();
+        }
+
+        function getTextureKeys() {
+            const copy = {};
+            for (let k in textures) {
+                copy[k] = textures[k].src;
+            }
+            return copy;
+        }
+
+        function restoreState(state) {
+            textures = {};
+            const keys = Object.keys(state);
+            let loaded = 0;
+            if (keys.length === 0) {
+                redrawAtlas();
+                updateStats();
+                return;
+            }
+            keys.forEach(k => {
+                const img = new Image();
+                img.onload = () => {
+                    textures[k] = img;
+                    loaded++;
+                    if (loaded === keys.length) {
+                        redrawAtlas();
+                        updateStats();
+                    }
+                };
+                img.src = state[k];
+            });
+        }
+
+        function undoAction() {
+            if (historyStack.length > 0) {
+                redoStack.push(JSON.parse(JSON.stringify(getTextureKeys())));
+                const prevState = historyStack.pop();
+                restoreState(prevState);
+            }
+        }
+
+        function redoAction() {
+            if (redoStack.length > 0) {
+                historyStack.push(JSON.parse(JSON.stringify(getTextureKeys())));
+                const nextState = redoStack.pop();
+                restoreState(nextState);
+            }
+        }
+
+        function setupKeyboardShortcuts() {
+            window.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key.toLowerCase() === 'z') {
+                    e.preventDefault();
+                    if (e.shiftKey) {
+                        redoAction();
+                    } else {
+                        undoAction();
+                    }
+                }
+                if (e.ctrlKey && e.key.toLowerCase() === 's') {
+                    e.preventDefault();
+                    if (e.shiftKey) {
+                        loadLatestSession();
+                    } else {
+                        quickSaveProject();
+                    }
+                }
+            });
+        }
+
+        function openFilterWindow() {
+            document.getElementById('filterWin').classList.remove('hidden');
+        }
+
+        function closeFilterWindow() {
+            document.getElementById('filterWin').classList.add('hidden');
+        }
+
+        function openShortcutsWindow() {
+            document.getElementById('shortcutsWin').classList.remove('hidden');
+        }
+
+        function closeShortcutsWindow() {
+            document.getElementById('shortcutsWin').classList.add('hidden');
+        }
+
+        function openSaveModal() {
+            document.getElementById('modalSaveDate').innerText = lastEditDate;
+            document.getElementById('modalSaveWeight').innerText = document.getElementById('infoWeight').innerText.replace('Peso estimado: ', '');
+            document.getElementById('saveModal').classList.remove('hidden');
+        }
+
+        function closeSaveModal() {
+            document.getElementById('saveModal').classList.add('hidden');
+        }
+
+        let selectedProjectName = null;
+
+        function openLoadModal() {
+            const containerList = document.getElementById('projectListContainer');
+            containerList.innerHTML = '';
+            const keys = Object.keys(localStorage).filter(k => k.startsWith('atlas_proj_'));
+            
+            if (keys.length === 0) {
+                containerList.innerHTML = '<span class="text-gray-500 p-1">No hay proyectos guardados.</span>';
+                document.getElementById('modalLoadName').innerText = '-';
+                document.getElementById('modalLoadWeight').innerText = '-';
+                document.getElementById('modalLoadDate').innerText = '-';
+                selectedProjectName = null;
+            } else {
+                keys.forEach((k, idx) => {
+                    const data = JSON.parse(localStorage.getItem(k));
+                    const div = document.createElement('div');
+                    div.className = 'p-1 hover:bg-blue-200 cursor-pointer rounded';
+                    div.innerText = data.name;
+                    div.onclick = () => {
+                        document.querySelectorAll('#projectListContainer div').forEach(el => el.classList.remove('bg-blue-300'));
+                        div.classList.add('bg-blue-300');
+                        selectedProjectName = k;
+                        document.getElementById('modalLoadName').innerText = data.name;
+                        document.getElementById('modalLoadWeight').innerText = data.weight || 'Desconocido';
+                        document.getElementById('modalLoadDate').innerText = data.date || '-';
+                    };
+                    containerList.appendChild(div);
+                    if (idx === 0) div.click();
+                });
+            }
+            document.getElementById('loadModal').classList.remove('hidden');
+        }
+
+        function closeLoadModal() {
+            document.getElementById('loadModal').classList.add('hidden');
+        }
+
+        function quickSaveProject() {
+            const projData = {
+                name: 'proyecto_rapido',
+                cols: gridCols,
+                rows: gridRows,
+                cWidth: cellWidth,
+                cHeight: cellHeight,
+                textures: getTextureKeys(),
+                date: new Date().toLocaleString(),
+                weight: document.getElementById('infoWeight').innerText.replace('Peso estimado: ', '')
+            };
+            localStorage.setItem('atlas_proj_proyecto_rapido', JSON.stringify(projData));
+            alert('Proyecto guardado rápidamente (Ctrl + S).');
+        }
+
+        function loadLatestSession() {
+            const keys = Object.keys(localStorage).filter(k => k.startsWith('atlas_proj_'));
+            if (keys.length > 0) {
+                const latestKey = keys[keys.length - 1];
+                const data = JSON.parse(localStorage.getItem(latestKey));
+                applyLoadedProjectData(data);
+                alert('Última sesión cargada correctamente (Ctrl + Shift + S).');
+            } else {
+                alert('No hay sesiones previas guardadas.');
+            }
+        }
+
+        function confirmSaveProject() {
+            const nameInput = document.getElementById('saveProjectName').value.trim() || 'proyecto_atlas';
+            const projData = {
+                name: nameInput,
+                cols: gridCols,
+                rows: gridRows,
+                cWidth: cellWidth,
+                cHeight: cellHeight,
+                textures: getTextureKeys(),
+                date: lastEditDate,
+                weight: document.getElementById('modalSaveWeight').innerText
+            };
+            localStorage.setItem('atlas_proj_' + nameInput, JSON.stringify(projData));
+            closeSaveModal();
+            alert('Proyecto guardado con éxito.');
+        }
+
+        function confirmLoadProject() {
+            if (!selectedProjectName) return;
+            const data = JSON.parse(localStorage.getItem(selectedProjectName));
+            if (data) {
+                applyLoadedProjectData(data);
+                closeLoadModal();
+                alert('Proyecto cargado con éxito.');
+            }
+        }
+
+        function applyLoadedProjectData(data) {
+            gridCols = data.cols;
+            gridRows = data.rows;
+            cellWidth = data.cWidth;
+            cellHeight = data.cHeight;
+            document.getElementById('gridCols').value = gridCols;
+            document.getElementById('gridRows').value = gridRows;
+            document.getElementById('cellWidth').value = cellWidth;
+            document.getElementById('cellHeight').value = cellHeight;
+            canvas.width = gridCols * cellWidth;
+            canvas.height = gridRows * cellHeight;
+            restoreState(data.textures);
+        }
+
+        function toggleGrayscale() {
+            saveState();
+            isGrayscaleActive = !isGrayscaleActive;
+            const btn = document.getElementById('btnGrayscaleToggle');
+            if (isGrayscaleActive) {
+                btn.innerText = "ON";
+                btn.className = "px-3 py-1 text-xs font-bold text-white bg-green-600 rounded border border-black transition";
+            } else {
+                btn.innerText = "OFF";
+                btn.className = "px-3 py-1 text-xs font-bold text-white bg-gray-500 rounded border border-black transition";
+            }
+            redrawAtlas();
+        }
+
+        function toggleInvert() {
+            saveState();
+            isInvertActive = !isInvertActive;
+            const btn = document.getElementById('btnInvertToggle');
+            if (isInvertActive) {
+                btn.innerText = "ON";
+                btn.className = "px-3 py-1 text-xs font-bold text-white bg-green-600 rounded border border-black transition";
+            } else {
+                btn.innerText = "OFF";
+                btn.className = "px-3 py-1 text-xs font-bold text-white bg-gray-500 rounded border border-black transition";
+            }
+            redrawAtlas();
+        }
+
+        function toggleSketch() {
+            saveState();
+            isSketchActive = !isSketchActive;
+            const btn = document.getElementById('btnSketchToggle');
+            if (isSketchActive) {
+                btn.innerText = "ON";
+                btn.className = "px-3 py-1 text-xs font-bold text-white bg-green-600 rounded border border-black transition";
+            } else {
+                btn.innerText = "OFF";
+                btn.className = "px-3 py-1 text-xs font-bold text-white bg-gray-500 rounded border border-black transition";
+            }
+            redrawAtlas();
+        }
+
+        function toggleBlur() {
+            saveState();
+            isBlurActive = !isBlurActive;
+            const btn = document.getElementById('btnBlurToggle');
+            if (isBlurActive) {
+                btn.innerText = "ON";
+                btn.className = "px-3 py-1 text-xs font-bold text-white bg-green-600 rounded border border-black transition";
+            } else {
+                btn.innerText = "OFF";
+                btn.className = "px-3 py-1 text-xs font-bold text-white bg-gray-500 rounded border border-black transition";
+            }
+            redrawAtlas();
+        }
+
+        function togglePixel() {
+            saveState();
+            isPixelActive = !isPixelActive;
+            const btn = document.getElementById('btnPixelToggle');
+            if (isPixelActive) {
+                btn.innerText = "ON";
+                btn.className = "px-3 py-1 text-xs font-bold text-white bg-green-600 rounded border border-black transition";
+            } else {
+                btn.innerText = "OFF";
+                btn.className = "px-3 py-1 text-xs font-bold text-white bg-gray-500 rounded border border-black transition";
+            }
+            redrawAtlas();
+        }
+
+        function setBlurIntensity(value) {
+            blurIntensity = parseInt(value) || 1;
+            document.getElementById('blurIntensityVal').innerText = blurIntensity;
+            if (isBlurActive) redrawAtlas();
+        }
+
+        function setPixelIntensity(value) {
+            pixelIntensity = parseInt(value) || 2;
+            document.getElementById('pixelIntensityVal').innerText = pixelIntensity;
+            if (isPixelActive) redrawAtlas();
+        }
+
+        function applyBlurPixelEffects(targetCanvas, targetCtx, scale) {
+            const w = targetCanvas.width;
+            const h = targetCanvas.height;
+
+            if (isBlurActive) {
+                const tmp = document.createElement('canvas');
+                tmp.width = w;
+                tmp.height = h;
+                const tctx = tmp.getContext('2d');
+                tctx.filter = `blur(${blurIntensity * scale}px)`;
+                tctx.drawImage(targetCanvas, 0, 0);
+                tctx.filter = 'none';
+                targetCtx.clearRect(0, 0, w, h);
+                targetCtx.drawImage(tmp, 0, 0);
+            }
+
+            if (isPixelActive) {
+                const size = Math.max(1, Math.round(pixelIntensity * scale));
+                const sw = Math.max(1, Math.ceil(w / size));
+                const sh = Math.max(1, Math.ceil(h / size));
+                const small = document.createElement('canvas');
+                small.width = sw;
+                small.height = sh;
+                const sctx = small.getContext('2d');
+                sctx.imageSmoothingEnabled = true;
+                sctx.imageSmoothingQuality = 'high';
+                sctx.drawImage(targetCanvas, 0, 0, sw, sh);
+                targetCtx.clearRect(0, 0, w, h);
+                targetCtx.imageSmoothingEnabled = false;
+                targetCtx.drawImage(small, 0, 0, sw, sh, 0, 0, sw * size, sh * size);
+                targetCtx.imageSmoothingEnabled = true;
+            }
+        }
 
         function setupPanListener() {
             container.addEventListener('mousedown', (e) => {
@@ -234,6 +750,7 @@
                         reader.onload = function(event) {
                             const img = new Image();
                             img.onload = function() {
+                                saveState();
                                 assignToNextAvailableCell(img);
                             };
                             img.src = event.target.result;
@@ -305,33 +822,9 @@
             updateStats();
         }
 
-        function onQualitySliderChange(val) {
-            qualityMultiplier = parseInt(val) / 100;
-            document.getElementById('qualitySliderVal').innerText = val + '%';
-            redrawAtlas();
-            updateStats();
-        }
-
-        function setFiltering(mode) {
-            filteringMode = mode;
-            updateFilteringUI();
-            redrawAtlas();
-        }
-
-        function updateFilteringUI() {
-            const btnBlur = document.getElementById('btnBlur');
-            const btnPixel = document.getElementById('btnPixel');
-            if (filteringMode === 'blur') {
-                btnBlur.className = "bg-[#e67e22] text-white text-xs py-1.5 rounded font-medium transition border border-[#d35400]";
-                btnPixel.className = "bg-zinc-700 text-zinc-300 text-xs py-1.5 rounded font-medium transition border border-zinc-600";
-            } else {
-                btnPixel.className = "bg-[#e67e22] text-white text-xs py-1.5 rounded font-medium transition border border-[#d35400]";
-                btnBlur.className = "bg-zinc-700 text-zinc-300 text-xs py-1.5 rounded font-medium transition border border-zinc-600";
-            }
-        }
-
         function handleFiles(files) {
-            Array.from(files).forEach((file, index) => {
+            saveState();
+            Array.from(files).forEach((file) => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = new Image();
@@ -346,25 +839,31 @@
         }
 
         function clearAllTextures() {
+            saveState();
             textures = {};
             redrawAtlas();
             updateStats();
         }
 
-        function redrawAtlas() {
-            if (filteringMode === 'blur') {
-                ctx.imageSmoothingEnabled = true;
-                if (qualityMultiplier <= 0.5) {
-                    ctx.imageSmoothingQuality = 'low';
-                } else if (qualityMultiplier <= 1.0) {
-                    ctx.imageSmoothingQuality = 'medium';
-                } else {
-                    ctx.imageSmoothingQuality = 'high';
-                }
-            } else {
-                ctx.imageSmoothingEnabled = false;
-            }
+        function drawImageContain(targetCtx, img, cellX, cellY, cWidth, cHeight) {
+            const imgRatio = img.width / img.height;
+            const cellRatio = cWidth / cHeight;
+            let dWidth = cWidth;
+            let dHeight = cHeight;
+            let dx = cellX;
+            let dy = cellY;
 
+            if (imgRatio > cellRatio) {
+                dHeight = cWidth / imgRatio;
+                dy = cellY + (cHeight - dHeight) / 2;
+            } else {
+                dWidth = cHeight * imgRatio;
+                dx = cellX + (cWidth - dWidth) / 2;
+            }
+            targetCtx.drawImage(img, dx, dy, dWidth, dHeight);
+        }
+
+        function redrawAtlas() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             const patternSize = 16;
@@ -382,19 +881,7 @@
                     const y = r * cellHeight;
 
                     if (textures[key]) {
-                        if (filteringMode === 'pixel' && qualityMultiplier < 1.0) {
-                            const step = Math.round(1 / qualityMultiplier);
-                            const tempCanvas = document.createElement('canvas');
-                            const tempCtx = tempCanvas.getContext('2d');
-                            tempCanvas.width = Math.max(1, Math.floor(cellWidth * qualityMultiplier));
-                            tempCanvas.height = Math.max(1, Math.floor(cellHeight * qualityMultiplier));
-                            tempCtx.imageSmoothingEnabled = false;
-                            tempCtx.drawImage(textures[key], 0, 0, tempCanvas.width, tempCanvas.height);
-                            ctx.imageSmoothingEnabled = false;
-                            ctx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, x, y, cellWidth, cellHeight);
-                        } else {
-                            ctx.drawImage(textures[key], x, y, cellWidth, cellHeight);
-                        }
+                        drawImageContain(ctx, textures[key], x, y, cellWidth, cellHeight);
                     }
 
                     ctx.strokeStyle = '#3f3f46';
@@ -407,6 +894,68 @@
                         ctx.fillText(`${c},${r}`, x + 6, y + 16);
                     }
                 }
+            }
+
+            if (isBlurActive || isPixelActive) {
+                applyBlurPixelEffects(canvas, ctx, 1);
+            }
+
+            if (isGrayscaleActive || isInvertActive || isSketchActive) {
+                const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imgData.data;
+
+                if (isGrayscaleActive && !isSketchActive) {
+                    for (let i = 0; i < data.length; i += 4) {
+                        const avg = data[i] * 0.3 + data[i+1] * 0.59 + data[i+2] * 0.11;
+                        data[i] = avg;
+                        data[i+1] = avg;
+                        data[i+2] = avg;
+                    }
+                }
+
+                if (isInvertActive && !isSketchActive) {
+                    for (let i = 0; i < data.length; i += 4) {
+                        data[i] = 255 - data[i];
+                        data[i+1] = 255 - data[i+1];
+                        data[i+2] = 255 - data[i+2];
+                    }
+                }
+
+                if (isSketchActive) {
+                    const w = canvas.width;
+                    const h = canvas.height;
+                    const gray = new Uint8Array(w * h);
+                    
+                    for (let i = 0, j = 0; i < data.length; i += 4, j++) {
+                        gray[j] = data[i] * 0.3 + data[i+1] * 0.59 + data[i+2] * 0.11;
+                    }
+
+                    for (let y = 0; y < h; y++) {
+                        for (let x = 0; x < w; x++) {
+                            const idx = y * w + x;
+                            let isEdge = false;
+                            
+                            if (x > 0 && x < w - 1 && y > 0 && y < h - 1) {
+                                const gx = Math.abs(gray[(y-1)*w + (x+1)] - gray[(y-1)*w + (x-1)]) +
+                                           Math.abs(gray[y*w + (x+1)] - gray[y*w + (x-1)]) * 2 +
+                                           Math.abs(gray[(y+1)*w + (x+1)] - gray[(y+1)*w + (x-1)]);
+                                if (gx > 35) isEdge = true;
+                            }
+
+                            const destIdx = idx * 4;
+                            if (isEdge) {
+                                data[destIdx] = 0;
+                                data[destIdx+1] = 0;
+                                data[destIdx+2] = 0;
+                            } else {
+                                data[destIdx] = 255;
+                                data[destIdx+1] = 255;
+                                data[destIdx+2] = 255;
+                            }
+                        }
+                    }
+                }
+                ctx.putImageData(imgData, 0, 0);
             }
         }
 
@@ -423,6 +972,7 @@
             if (c >= 0 && c < gridCols && r >= 0 && r < gridRows) {
                 const key = `${c}-${r}`;
                 if (textures[key]) {
+                    saveState();
                     delete textures[key];
                     redrawAtlas();
                     updateStats();
@@ -441,10 +991,12 @@
         }
 
         function updateStats() {
-            const baseWidth = gridCols * cellWidth;
-            const baseHeight = gridRows * cellHeight;
-            const totalWidth = baseWidth * qualityMultiplier;
-            const totalHeight = baseHeight * qualityMultiplier;
+            const scale = parseFloat(document.getElementById('exportScale').value) || 1;
+            const format = document.getElementById('exportFormat').value;
+            const quality = parseInt(document.getElementById('exportQuality').value) / 100;
+
+            const finalWidth = gridCols * cellWidth * scale;
+            const finalHeight = gridRows * cellHeight * scale;
 
             const hasTextures = Object.keys(textures).length > 0;
 
@@ -453,7 +1005,7 @@
             const badgeEl = document.getElementById('infoImpactBadge');
             const descEl = document.getElementById('infoImpactDesc');
 
-            resEl.innerText = `${Math.round(totalWidth)} × ${Math.round(totalHeight)} px`;
+            resEl.innerText = `${Math.round(finalWidth)} × ${Math.round(finalHeight)} px`;
 
             if (!hasTextures) {
                 weightEl.innerText = "Peso estimado: 0 B";
@@ -463,23 +1015,18 @@
                 return;
             }
 
-            const format = document.getElementById('exportFormat').value;
-            const quality = parseInt(document.getElementById('exportQuality').value) / 100;
-            const scale = parseFloat(document.getElementById('exportScale').value);
+            const totalPixels = finalWidth * finalHeight;
+            let bpp = 4;
 
-            const scaledWidth = totalWidth * scale;
-            const scaledHeight = totalHeight * scale;
-            const totalPixels = scaledWidth * scaledHeight;
-
-            let estimatedBytes = 0;
-            if (format === 'image/png') {
-                estimatedBytes = totalPixels * 0.35;
-            } else if (format === 'image/jpeg') {
-                estimatedBytes = totalPixels * 0.15 * quality;
+            if (format === 'image/jpeg') {
+                bpp = 0.8 * quality;
             } else if (format === 'image/webp') {
-                estimatedBytes = totalPixels * 0.12 * quality;
+                bpp = 0.5 * quality;
+            } else if (format === 'image/png') {
+                bpp = isSketchActive ? 0.3 : (isGrayscaleActive ? 1.5 : 2.5);
             }
 
+            const estimatedBytes = totalPixels * bpp;
             let sizeStr = "";
             if (estimatedBytes < 1024) {
                 sizeStr = `${Math.round(estimatedBytes)} B`;
@@ -491,18 +1038,18 @@
 
             weightEl.innerText = `Peso estimado: ${sizeStr}`;
 
-            if (estimatedBytes < 80 * 1024) {
+            if (estimatedBytes < 150 * 1024) {
                 badgeEl.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
                 badgeEl.innerText = "🟢 BAJO";
-                descEl.innerText = "Recomendado para web, juegos móviles y archivos ligeros";
-            } else if (estimatedBytes < 500 * 1024) {
+                descEl.innerText = "Recomendado para web y juegos móviles";
+            } else if (estimatedBytes < 800 * 1024) {
                 badgeEl.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30";
                 badgeEl.innerText = "🟡 MEDIO";
                 descEl.innerText = "Equilibrado, válido para la mayoría de usos";
             } else {
                 badgeEl.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30";
                 badgeEl.innerText = "🔴 ALTO";
-                descEl.innerText = "Mayor calidad, ideal para impresión o archivos fuente";
+                descEl.innerText = "Mayor calidad, alto consumo de memoria";
             }
         }
 
@@ -514,28 +1061,85 @@
             const exportCanvas = document.createElement('canvas');
             const exportCtx = exportCanvas.getContext('2d');
 
-            const totalWidth = gridCols * cellWidth * qualityMultiplier;
-            const totalHeight = gridRows * cellHeight * qualityMultiplier;
+            const totalWidth = gridCols * cellWidth * scale;
+            const totalHeight = gridRows * cellHeight * scale;
 
-            exportCanvas.width = totalWidth * scale;
-            exportCanvas.height = totalHeight * scale;
-
-            exportCtx.imageSmoothingEnabled = (filteringMode === 'blur');
-            if (filteringMode === 'blur') {
-                exportCtx.imageSmoothingQuality = 'high';
-            }
+            exportCanvas.width = totalWidth;
+            exportCanvas.height = totalHeight;
 
             for (let r = 0; r < gridRows; r++) {
                 for (let c = 0; c < gridCols; c++) {
                     const key = `${c}-${r}`;
                     if (textures[key]) {
-                        const x = c * cellWidth * qualityMultiplier * scale;
-                        const y = r * cellHeight * qualityMultiplier * scale;
-                        const w = cellWidth * qualityMultiplier * scale;
-                        const h = cellHeight * qualityMultiplier * scale;
-                        exportCtx.drawImage(textures[key], x, y, w, h);
+                        const baseCellW = cellWidth * scale;
+                        const baseCellH = cellHeight * scale;
+                        const x = c * baseCellW;
+                        const y = r * baseCellH;
+                        drawImageContain(exportCtx, textures[key], x, y, baseCellW, baseCellH);
                     }
                 }
+            }
+
+            if (isBlurActive || isPixelActive) {
+                applyBlurPixelEffects(exportCanvas, exportCtx, scale);
+            }
+
+            if (isGrayscaleActive || isInvertActive || isSketchActive) {
+                const expImgData = exportCtx.getImageData(0, 0, exportCanvas.width, exportCanvas.height);
+                const expData = expImgData.data;
+
+                if (isGrayscaleActive && !isSketchActive) {
+                    for (let i = 0; i < expData.length; i += 4) {
+                        const avg = expData[i] * 0.3 + expData[i+1] * 0.59 + expData[i+2] * 0.11;
+                        expData[i] = avg;
+                        expData[i+1] = avg;
+                        expData[i+2] = avg;
+                    }
+                }
+
+                if (isInvertActive && !isSketchActive) {
+                    for (let i = 0; i < expData.length; i += 4) {
+                        expData[i] = 255 - expData[i];
+                        expData[i+1] = 255 - expData[i+1];
+                        expData[i+2] = 255 - expData[i+2];
+                    }
+                }
+
+                if (isSketchActive) {
+                    const ew = exportCanvas.width;
+                    const eh = exportCanvas.height;
+                    const eGray = new Uint8Array(ew * eh);
+                    
+                    for (let i = 0, j = 0; i < expData.length; i += 4, j++) {
+                        eGray[j] = expData[i] * 0.3 + expData[i+1] * 0.59 + expData[i+2] * 0.11;
+                    }
+
+                    for (let y = 0; y < eh; y++) {
+                        for (let x = 0; x < ew; x++) {
+                            const idx = y * ew + x;
+                            let isEdge = false;
+                            
+                            if (x > 0 && x < ew - 1 && y > 0 && y < eh - 1) {
+                                const gx = Math.abs(eGray[(y-1)*ew + (x+1)] - eGray[(y-1)*ew + (x-1)]) +
+                                           Math.abs(eGray[y*ew + (x+1)] - eGray[y*ew + (x-1)]) * 2 +
+                                           Math.abs(eGray[(y+1)*ew + (x+1)] - eGray[(y+1)*ew + (x-1)]);
+                                if (gx > 35) isEdge = true;
+                            }
+
+                            const destIdx = idx * 4;
+                            if (isEdge) {
+                                expData[destIdx] = 0;
+                                expData[destIdx+1] = 0;
+                                expData[destIdx+2] = 0;
+                            } else {
+                                expData[destIdx] = 255;
+                                expData[destIdx+1] = 255;
+                                expData[destIdx+2] = 255;
+                            }
+                        }
+                    }
+                }
+                exportCtx.putImageData(expImgData, 0, 0);
             }
 
             const dataUrl = exportCanvas.toDataURL(format, quality);
