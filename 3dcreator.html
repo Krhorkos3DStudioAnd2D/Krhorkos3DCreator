@@ -501,6 +501,146 @@
         }
     </style>
 
+    <style>
+        #textures-list .tex-empty {
+            font-size: 11px;
+            color: #999999;
+            padding: 2px 0;
+        }
+
+        #textures-list .tex-entry {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            padding: 6px;
+            margin-bottom: 6px;
+        }
+
+        #textures-list .tex-entry:last-child {
+            margin-bottom: 0;
+        }
+
+        #textures-list .tex-head {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 5px;
+        }
+
+        #textures-list .tex-thumb {
+            width: 36px;
+            height: 36px;
+            flex: none;
+            border: 1px solid var(--border);
+            background: #111;
+        }
+
+        #textures-list .tex-info {
+            min-width: 0;
+            flex: 1;
+        }
+
+        #textures-list .tex-slot {
+            font-weight: bold;
+            color: var(--text-bright);
+            font-size: 11px;
+        }
+
+        #textures-list .tex-name {
+            font-size: 10px;
+            color: #999999;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #textures-list .tex-entry button {
+            width: 100%;
+            justify-content: center;
+            margin-top: 3px;
+        }
+
+        #textures-list .tex-int-title {
+            font-size: 10px;
+            color: var(--text-bright);
+            margin-top: 6px;
+        }
+
+        #textures-list .tex-slider {
+            width: 100%;
+            margin: 2px 0 0 0;
+        }
+
+        #textures-list .tex-slider:disabled {
+            opacity: 0.4;
+        }
+
+        #textures-list .tex-int-hint {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            color: #999999;
+        }
+
+        #point-light-window {
+            display: none;
+            position: absolute;
+            top: 54px;
+            right: 10px;
+            width: 190px;
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+            z-index: 7;
+            color: var(--text);
+        }
+
+        #point-light-window .pl-title {
+            background-color: rgba(0, 0, 0, 0.25);
+            padding: 4px 8px;
+            font-weight: bold;
+            font-size: 11px;
+            color: var(--accent);
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
+        }
+
+        #point-light-window .pl-body {
+            padding: 8px;
+        }
+
+        #point-light-window .pl-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+
+        #point-light-window .pl-row input[type="number"] {
+            width: 74px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            color: var(--text-bright);
+            padding: 3px 5px;
+            border-radius: 3px;
+        }
+
+        #point-light-window .pl-row input[type="color"] {
+            width: 74px;
+            height: 22px;
+            padding: 0;
+            border: 1px solid var(--border);
+            background: transparent;
+        }
+
+        #point-light-window .pl-slider {
+            width: 100%;
+            margin: 0 0 8px 0;
+        }
+    </style>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
@@ -556,6 +696,12 @@
                     <button onclick="addLight('spot')">Foco (Spot)</button>
                 </div>
             </div>
+
+            <div class="panel-title">Texturas</div>
+            <div class="panel-section" id="textures-section">
+                <div id="textures-list"></div>
+                <input type="file" id="texture-section-input" accept="image/*" style="display:none;" onchange="handleTextureSectionFile(event)">
+            </div>
         </div>
 
         <div id="viewport-container">
@@ -586,6 +732,26 @@
                 • Triangulos totales: <span id="stat-tris">0</span><br>
                 • Objetos en escena: <span id="stat-objs">0</span><br>
                 • Memoria estimada: <span id="stat-mem">0 KB</span>
+            </div>
+
+            <div id="point-light-window">
+                <div class="pl-title">Propiedades de Luz Puntual</div>
+                <div class="pl-body">
+                    <div class="pl-row">
+                        <label>Color</label>
+                        <input type="color" id="pl-color" value="#ffffff">
+                    </div>
+                    <div class="pl-row">
+                        <label>Brillo</label>
+                        <input type="number" id="pl-intensity-number" min="0" step="0.1" value="1">
+                    </div>
+                    <input type="range" id="pl-intensity" class="pl-slider" min="0" max="10" step="0.05" value="1">
+                    <div class="pl-row">
+                        <label>Rango</label>
+                        <input type="number" id="pl-range-number" min="0.5" max="50" step="0.5" value="10">
+                    </div>
+                    <input type="range" id="pl-range" class="pl-slider" min="0.5" max="50" step="0.1" value="10">
+                </div>
             </div>
 
             <div id="viewport"></div>
@@ -2230,6 +2396,671 @@
 
         addPrimitive('cube');
         animate();
+    </script>
+
+    <script>
+        const texSlots = [
+            ['map', 'Color'],
+            ['normalMap', 'Relieve Normal'],
+            ['bumpMap', 'Bump'],
+            ['roughnessMap', 'Rugosidad'],
+            ['metalnessMap', 'Metálico'],
+            ['emissiveMap', 'Emisión'],
+            ['alphaMap', 'Alfa'],
+            ['aoMap', 'Oclusión']
+        ];
+
+        let pendingTexAction = null;
+        let lastTexSignature = '';
+        let preSelection = null;
+
+        function isImportedMesh(obj) {
+            let p = obj ? obj.parent : null;
+            while (p) {
+                if (p.userData && p.userData.importedRoot) return true;
+                p = p.parent;
+            }
+            return false;
+        }
+
+        function rawMaterials(mesh) {
+            if (!mesh || !mesh.material) return [];
+            return Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        }
+
+        function ensureOwnMaterials(mesh) {
+            if (!mesh || !mesh.material || mesh.userData.ownMaterials) return;
+            mesh.material = Array.isArray(mesh.material) ? mesh.material.map(m => m.clone()) : mesh.material.clone();
+            mesh.userData.ownMaterials = true;
+        }
+
+        function textureStillUsed(tex) {
+            let used = false;
+            scene.traverse(o => {
+                if (used || !(o.isMesh || o.isSprite)) return;
+                rawMaterials(o).forEach(mat => {
+                    texSlots.forEach(s => {
+                        if (mat && mat[s[0]] === tex) used = true;
+                    });
+                });
+            });
+            return used;
+        }
+
+        function releaseTexture(tex) {
+            if (tex && !textureStillUsed(tex)) tex.dispose();
+        }
+
+        function isGeneratedRelief(tex) {
+            return !!(tex && tex.userData && tex.userData.generatedRelief);
+        }
+
+        function texturesSignature() {
+            const mesh = selectedObject && selectedObject.isMesh ? selectedObject : null;
+            if (!mesh) return 'none';
+            return mesh.uuid + '|' + rawMaterials(mesh).map(mat => {
+                return mat.uuid + texSlots.map(s => (mat[s[0]] ? mat[s[0]].uuid : '-')).join('') + (mat.userData.reliefSlot || '');
+            }).join(';');
+        }
+
+        function isNormalLike(tex) {
+            try {
+                const c = document.createElement('canvas');
+                c.width = 16;
+                c.height = 16;
+                const g = c.getContext('2d');
+                g.drawImage(tex.image, 0, 0, 16, 16);
+                const d = g.getImageData(0, 0, 16, 16).data;
+                let r = 0, gr = 0, b = 0;
+                const n = d.length / 4;
+                for (let i = 0; i < d.length; i += 4) {
+                    r += d[i];
+                    gr += d[i + 1];
+                    b += d[i + 2];
+                }
+                r /= n;
+                gr /= n;
+                b /= n;
+                return b > 170 && b > r + 30 && b > gr + 30 && r > 80 && r < 180 && gr > 80 && gr < 180;
+            } catch (err) {
+                return false;
+            }
+        }
+
+        function copyTextureSettings(from, to) {
+            to.wrapS = from.wrapS;
+            to.wrapT = from.wrapT;
+            to.repeat.copy(from.repeat);
+            to.offset.copy(from.offset);
+            to.center.copy(from.center);
+            to.rotation = from.rotation;
+            to.flipY = from.flipY;
+        }
+
+        function buildHeightTexture(tex) {
+            const img = tex.image;
+            const iw = img.width || img.naturalWidth;
+            const ih = img.height || img.naturalHeight;
+            if (!iw || !ih) return null;
+            const k = Math.min(1, 2048 / Math.max(iw, ih));
+            const w = Math.max(1, Math.round(iw * k));
+            const h = Math.max(1, Math.round(ih * k));
+            try {
+                const c = document.createElement('canvas');
+                c.width = w;
+                c.height = h;
+                const g = c.getContext('2d');
+                g.drawImage(img, 0, 0, w, h);
+                const data = g.getImageData(0, 0, w, h);
+                const px = data.data;
+                for (let i = 0; i < px.length; i += 4) {
+                    const lum = px[i] * 0.299 + px[i + 1] * 0.587 + px[i + 2] * 0.114;
+                    px[i] = lum;
+                    px[i + 1] = lum;
+                    px[i + 2] = lum;
+                    px[i + 3] = 255;
+                }
+                g.putImageData(data, 0, 0);
+                const out = new THREE.CanvasTexture(c);
+                copyTextureSettings(tex, out);
+                out.userData.generatedRelief = true;
+                return out;
+            } catch (err) {
+                return null;
+            }
+        }
+
+        function clearGeneratedRelief(mat) {
+            if (isGeneratedRelief(mat.bumpMap)) {
+                const t = mat.bumpMap;
+                mat.bumpMap = null;
+                t.dispose();
+            }
+            if (isGeneratedRelief(mat.normalMap)) {
+                const t = mat.normalMap;
+                mat.normalMap = null;
+                t.dispose();
+            }
+            delete mat.userData.reliefSlot;
+            delete mat.userData.reliefType;
+            mat.needsUpdate = true;
+        }
+
+        function reliefTarget(mat, slot) {
+            if (slot === 'bumpMap') return 'bump';
+            if (slot === 'normalMap') return 'normal';
+            if (mat.userData.reliefSlot === slot) return mat.userData.reliefType;
+            return null;
+        }
+
+        function readIntensity(mat, target) {
+            let v = 1;
+            if (target === 'bump') v = (mat.bumpScale !== undefined ? mat.bumpScale : 2) / 2;
+            else if (target === 'normal') v = mat.normalScale ? mat.normalScale.x : 1;
+            return Math.max(0, Math.min(3, v));
+        }
+
+        function applyIntensity(mat, target, v) {
+            if (!mat) return;
+            if (target === 'bump') mat.bumpScale = v * 2;
+            else if (target === 'normal' && mat.normalScale) mat.normalScale.set(v, v);
+        }
+
+        function setReliefOn(mesh, matIndex, slot) {
+            ensureOwnMaterials(mesh);
+            ensureLitMaterial(mesh);
+            ensureMeshUV(mesh);
+            const mat = rawMaterials(mesh)[matIndex];
+            const src = mat ? mat[slot] : null;
+            if (!src) return;
+            clearGeneratedRelief(mat);
+            if (isNormalLike(src)) {
+                const n = src.clone();
+                n.encoding = THREE.LinearEncoding;
+                n.needsUpdate = true;
+                n.userData.generatedRelief = true;
+                mat.normalMap = n;
+                if (mat.normalScale) mat.normalScale.set(1, 1);
+                mat.userData.reliefType = 'normal';
+                ensureUVAndTangents(mesh);
+            } else {
+                let h = buildHeightTexture(src);
+                if (!h) {
+                    h = src.clone();
+                    h.encoding = THREE.LinearEncoding;
+                    h.needsUpdate = true;
+                    h.userData.generatedRelief = true;
+                }
+                mat.bumpMap = h;
+                mat.bumpScale = 2;
+                mat.userData.reliefType = 'bump';
+            }
+            mat.userData.reliefSlot = slot;
+            mat.needsUpdate = true;
+        }
+
+        function toggleRelief(mesh, matIndex, slot) {
+            ensureOwnMaterials(mesh);
+            const mat = rawMaterials(mesh)[matIndex];
+            if (!mat) return;
+            if (mat.userData.reliefSlot === slot) clearGeneratedRelief(mat);
+            else setReliefOn(mesh, matIndex, slot);
+            renderTexturesSection();
+        }
+
+        function removeEntryTexture(mesh, matIndex, slot) {
+            ensureOwnMaterials(mesh);
+            const mat = rawMaterials(mesh)[matIndex];
+            if (!mat) return;
+            const old = mat[slot];
+            if (mat.userData.reliefSlot === slot) clearGeneratedRelief(mat);
+            mat[slot] = null;
+            mat.needsUpdate = true;
+            releaseTexture(old);
+            if (selectedObject === mesh) refreshTexturePreview();
+            renderTexturesSection();
+            showNotification('Textura eliminada de la malla "' + mesh.name + '".');
+        }
+
+        function startTexAction(action) {
+            pendingTexAction = action;
+            const input = document.getElementById('texture-section-input');
+            input.value = '';
+            input.click();
+        }
+
+        function buildTextureThumb(tex) {
+            const c = document.createElement('canvas');
+            c.width = 36;
+            c.height = 36;
+            c.className = 'tex-thumb';
+            try {
+                c.getContext('2d').drawImage(tex.image, 0, 0, 36, 36);
+            } catch (err) {
+                return c;
+            }
+            return c;
+        }
+
+        function renderTexturesSection() {
+            const list = document.getElementById('textures-list');
+            list.innerHTML = '';
+            lastTexSignature = texturesSignature();
+
+            const mesh = selectedObject && selectedObject.isMesh ? selectedObject : null;
+            if (!mesh) {
+                const empty = document.createElement('div');
+                empty.className = 'tex-empty';
+                empty.innerText = 'Selecciona una malla para ver sus texturas.';
+                list.appendChild(empty);
+                return;
+            }
+
+            let count = 0;
+            rawMaterials(mesh).forEach((mat, matIndex) => {
+                texSlots.forEach(s => {
+                    const slot = s[0];
+                    const tex = mat[slot];
+                    if (!tex || isGeneratedRelief(tex)) return;
+                    count++;
+
+                    const entry = document.createElement('div');
+                    entry.className = 'tex-entry';
+
+                    const head = document.createElement('div');
+                    head.className = 'tex-head';
+                    head.appendChild(buildTextureThumb(tex));
+
+                    const info = document.createElement('div');
+                    info.className = 'tex-info';
+                    const slotLabel = document.createElement('div');
+                    slotLabel.className = 'tex-slot';
+                    slotLabel.innerText = s[1];
+                    const nameLabel = document.createElement('div');
+                    nameLabel.className = 'tex-name';
+                    nameLabel.innerText = (tex.name && tex.name !== '' ? tex.name : (mat.name && mat.name !== '' ? mat.name : 'Material ' + (matIndex + 1)));
+                    info.appendChild(slotLabel);
+                    info.appendChild(nameLabel);
+                    head.appendChild(info);
+                    entry.appendChild(head);
+
+                    const changeBtn = document.createElement('button');
+                    changeBtn.innerText = 'Cambiar Textura';
+                    changeBtn.onclick = () => startTexAction({ mesh: mesh, matIndex: matIndex, slot: slot });
+                    entry.appendChild(changeBtn);
+
+                    if (slot !== 'bumpMap' && slot !== 'normalMap') {
+                        const reliefBtn = document.createElement('button');
+                        reliefBtn.innerText = 'Relieve';
+                        if (mat.userData.reliefSlot === slot) reliefBtn.classList.add('active');
+                        reliefBtn.onclick = () => toggleRelief(mesh, matIndex, slot);
+                        entry.appendChild(reliefBtn);
+                    }
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.innerText = 'Eliminar';
+                    removeBtn.onclick = () => removeEntryTexture(mesh, matIndex, slot);
+                    entry.appendChild(removeBtn);
+
+                    const target = reliefTarget(mat, slot);
+                    const intTitle = document.createElement('div');
+                    intTitle.className = 'tex-int-title';
+                    intTitle.innerText = 'Intensidad del relieve';
+                    entry.appendChild(intTitle);
+
+                    const slider = document.createElement('input');
+                    slider.type = 'range';
+                    slider.className = 'tex-slider';
+                    slider.min = 0;
+                    slider.max = 3;
+                    slider.step = 0.05;
+                    slider.value = target ? readIntensity(mat, target) : 1;
+                    slider.disabled = !target;
+                    slider.oninput = () => {
+                        const current = rawMaterials(mesh)[matIndex];
+                        if (current) applyIntensity(current, reliefTarget(current, slot), parseFloat(slider.value));
+                    };
+                    entry.appendChild(slider);
+
+                    const hint = document.createElement('div');
+                    hint.className = 'tex-int-hint';
+                    const lo = document.createElement('span');
+                    lo.innerText = 'Menos';
+                    const hi = document.createElement('span');
+                    hi.innerText = 'Más';
+                    hint.appendChild(lo);
+                    hint.appendChild(hi);
+                    entry.appendChild(hint);
+
+                    list.appendChild(entry);
+                });
+            });
+
+            if (count === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'tex-empty';
+                empty.innerText = 'Esta malla no tiene texturas.';
+                list.appendChild(empty);
+            }
+        }
+
+        function handleTextureSectionFile(event) {
+            const file = event.target.files[0];
+            const action = pendingTexAction;
+            if (!file || !action) return;
+            loadImageTexture(file, function (tex) {
+                performTexAction(action, tex);
+            });
+        }
+
+        function performTexAction(action, tex) {
+            const mesh = action.mesh;
+            if (!mesh) return;
+
+            ensureOwnMaterials(mesh);
+            const mat = rawMaterials(mesh)[action.matIndex];
+            if (!mat) return;
+
+            const old = mat[action.slot];
+            if (old) {
+                tex.flipY = old.flipY;
+                tex.encoding = old.encoding;
+                tex.wrapS = old.wrapS;
+                tex.wrapT = old.wrapT;
+                tex.repeat.copy(old.repeat);
+                tex.offset.copy(old.offset);
+                tex.center.copy(old.center);
+                tex.rotation = old.rotation;
+            } else if (action.slot === 'map' || action.slot === 'emissiveMap') {
+                tex.encoding = THREE.sRGBEncoding;
+            }
+            mat[action.slot] = tex;
+            mat.needsUpdate = true;
+            if (old && old !== tex) releaseTexture(old);
+
+            if (mat.userData.reliefSlot === action.slot) {
+                const keep = readIntensity(mat, mat.userData.reliefType);
+                setReliefOn(mesh, action.matIndex, action.slot);
+                const refreshed = rawMaterials(mesh)[action.matIndex];
+                applyIntensity(refreshed, refreshed.userData.reliefType, keep);
+            }
+
+            if (selectedObject === mesh) {
+                refreshTexturePreview();
+                renderTexturesSection();
+            }
+            showNotification('Textura cambiada solo en la malla "' + mesh.name + '".');
+        }
+
+        setInterval(() => {
+            if (texturesSignature() !== lastTexSignature) renderTexturesSection();
+        }, 400);
+
+        const pointLightWindow = document.getElementById('point-light-window');
+        const plColor = document.getElementById('pl-color');
+        const plIntensity = document.getElementById('pl-intensity');
+        const plIntensityNumber = document.getElementById('pl-intensity-number');
+        const plRange = document.getElementById('pl-range');
+        const plRangeNumber = document.getElementById('pl-range-number');
+
+        const RANGE_MIN = 0.5;
+        const RANGE_MAX = 50;
+
+        function selectedPointLight() {
+            return selectedObject && selectedObject.isPointLight ? selectedObject : null;
+        }
+
+        function syncPointLightWindow() {
+            const light = selectedPointLight();
+            pointLightWindow.style.display = light ? 'block' : 'none';
+            if (!light) return;
+            const active = document.activeElement;
+            const intensity = Math.round(light.intensity * 100) / 100;
+            const range = Math.round((light.distance > 0 ? light.distance : 10) * 100) / 100;
+            const hex = '#' + light.color.getHexString();
+            if (active !== plColor && plColor.value !== hex) plColor.value = hex;
+            if (active !== plIntensity && parseFloat(plIntensity.value) !== intensity) plIntensity.value = intensity;
+            if (active !== plIntensityNumber && parseFloat(plIntensityNumber.value) !== intensity) plIntensityNumber.value = intensity;
+            if (active !== plRange && parseFloat(plRange.value) !== range) plRange.value = range;
+            if (active !== plRangeNumber && parseFloat(plRangeNumber.value) !== range) plRangeNumber.value = range;
+        }
+
+        function setPointLightRange(value) {
+            const light = selectedPointLight();
+            if (!light) return;
+            const v = Math.max(RANGE_MIN, Math.min(RANGE_MAX, value));
+            light.distance = v;
+            const shown = Math.round(v * 100) / 100;
+            plRange.value = shown;
+            plRangeNumber.value = shown;
+        }
+
+        function setPointLightIntensity(value) {
+            const light = selectedPointLight();
+            if (!light) return;
+            light.intensity = Math.max(0, value);
+            const shown = Math.round(light.intensity * 100) / 100;
+            plIntensity.value = shown;
+            plIntensityNumber.value = shown;
+            syncLightUI(light);
+        }
+
+        plColor.addEventListener('input', () => {
+            const light = selectedPointLight();
+            if (!light) return;
+            light.color.set(plColor.value);
+            updateLightIconColor(light, plColor.value);
+            syncLightUI(light);
+        });
+
+        plIntensity.addEventListener('input', () => setPointLightIntensity(parseFloat(plIntensity.value) || 0));
+        plIntensityNumber.addEventListener('input', () => {
+            const v = parseFloat(plIntensityNumber.value);
+            if (!isNaN(v)) setPointLightIntensity(v);
+        });
+        plRange.addEventListener('input', () => setPointLightRange(parseFloat(plRange.value) || RANGE_MIN));
+        plRangeNumber.addEventListener('input', () => {
+            const v = parseFloat(plRangeNumber.value);
+            if (!isNaN(v)) setPointLightRange(v);
+        });
+
+        pointLightWindow.addEventListener('keydown', (e) => {
+            if (!e.ctrlKey && !e.metaKey && !e.altKey && !/^F\d+$/.test(e.key)) e.stopPropagation();
+        });
+
+        const rangeGizmo = new THREE.Group();
+        rangeGizmo.visible = false;
+        scene.add(rangeGizmo);
+
+        const rangeSphereGeometry = new THREE.SphereGeometry(1, 32, 16);
+        const rangeFill = new THREE.Mesh(rangeSphereGeometry, new THREE.MeshBasicMaterial({
+            color: 0xffd54a,
+            transparent: true,
+            opacity: 0.06,
+            depthWrite: false,
+            side: THREE.DoubleSide
+        }));
+        const rangeWire = new THREE.Mesh(rangeSphereGeometry, new THREE.MeshBasicMaterial({
+            color: 0xffd54a,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.22,
+            depthWrite: false
+        }));
+        const rangeLine = new THREE.Line(
+            new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]),
+            new THREE.LineBasicMaterial({ color: 0xe67e22, depthTest: false })
+        );
+        const rangeHandle = new THREE.Mesh(
+            new THREE.SphereGeometry(1, 16, 12),
+            new THREE.MeshBasicMaterial({ color: 0xe67e22, depthTest: false })
+        );
+
+        rangeFill.raycast = function () {};
+        rangeWire.raycast = function () {};
+        rangeLine.raycast = function () {};
+        rangeLine.renderOrder = 998;
+        rangeHandle.renderOrder = 1000;
+
+        rangeGizmo.add(rangeFill);
+        rangeGizmo.add(rangeWire);
+        rangeGizmo.add(rangeLine);
+        rangeGizmo.add(rangeHandle);
+
+        const rangeHandleWorld = new THREE.Vector3();
+        let rangeDragging = false;
+
+        function updateRangeGizmo() {
+            const light = selectedPointLight();
+            rangeGizmo.visible = !!light;
+            if (light) {
+                light.getWorldPosition(rangeGizmo.position);
+                const r = light.distance > 0 ? light.distance : 10;
+                rangeFill.scale.setScalar(r);
+                rangeWire.scale.setScalar(r);
+                rangeLine.scale.set(r, 1, 1);
+                rangeHandle.position.set(r, 0, 0);
+                rangeHandleWorld.copy(rangeGizmo.position);
+                rangeHandleWorld.x += r;
+                rangeHandle.scale.setScalar(Math.max(0.05, camera.position.distanceTo(rangeHandleWorld) * 0.02));
+                rangeFill.material.color.copy(light.color);
+                rangeWire.material.color.copy(light.color);
+                syncPointLightWindow();
+            }
+            requestAnimationFrame(updateRangeGizmo);
+        }
+
+        function pointerToNDC(e) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            return new THREE.Vector2(
+                ((e.clientX - rect.left) / rect.width) * 2 - 1,
+                -((e.clientY - rect.top) / rect.height) * 2 + 1
+            );
+        }
+
+        container.addEventListener('pointerdown', (e) => {
+            if (e.button !== 0 || !rangeGizmo.visible) return;
+            const rc = new THREE.Raycaster();
+            rc.setFromCamera(pointerToNDC(e), camera);
+            if (rc.intersectObject(rangeHandle, false).length === 0) return;
+            rangeDragging = true;
+            controls.enabled = false;
+            e.stopPropagation();
+            e.preventDefault();
+        }, true);
+
+        window.addEventListener('pointermove', (e) => {
+            if (!rangeDragging) return;
+            const rc = new THREE.Raycaster();
+            rc.setFromCamera(pointerToNDC(e), camera);
+            const o = rc.ray.origin;
+            const d = rc.ray.direction;
+            const w0 = rangeGizmo.position.clone().sub(o);
+            const b = d.x;
+            const denom = 1 - b * b;
+            if (denom < 0.0001) return;
+            const s = (b * d.dot(w0) - w0.x) / denom;
+            setPointLightRange(s);
+        });
+
+        window.addEventListener('pointerup', () => {
+            if (!rangeDragging) return;
+            rangeDragging = false;
+            controls.enabled = true;
+        });
+
+        const baseSelectObject = selectObject;
+        selectObject = function (obj) {
+            if (obj && obj.isMesh && isImportedMesh(obj)) ensureOwnMaterials(obj);
+            baseSelectObject(obj);
+            renderTexturesSection();
+            syncPointLightWindow();
+        };
+
+        const baseFinalizeImportedObject = finalizeImportedObject;
+        finalizeImportedObject = function (importedObj, fileName) {
+            importedObj.userData.importedRoot = true;
+            baseFinalizeImportedObject(importedObj, fileName);
+            selectObject(null);
+        };
+
+        const baseUpdateOutliner = updateOutliner;
+        updateOutliner = function () {
+            baseUpdateOutliner();
+            const list = document.getElementById('outliner-list');
+            Array.from(list.children).forEach(li => {
+                const root = li._obj;
+                if (!root || !root.userData || !root.userData.importedRoot) return;
+                collectMeshes(root).filter(m => m !== root).forEach(m => {
+                    const item = document.createElement('li');
+                    item.innerText = m.name !== '' ? m.name : 'Mesh';
+                    item._obj = m;
+                    if (selectedObject === m) item.classList.add('selected');
+                    item.onclick = () => selectObject(m);
+                    item.ondblclick = (e) => {
+                        e.preventDefault();
+                        startOutlinerRename(item, m);
+                    };
+                    list.insertBefore(item, li);
+                });
+                list.removeChild(li);
+            });
+        };
+
+        const baseDeleteSelected = deleteSelected;
+        deleteSelected = function () {
+            baseDeleteSelected();
+            objects.filter(o => o.userData && o.userData.importedRoot && collectMeshes(o).filter(m => m !== o).length === 0)
+                .forEach(o => removeObjectFully(o));
+            updateOutliner();
+            updateStats();
+        };
+
+        container.addEventListener('pointerdown', () => {
+            preSelection = selectedObject;
+        }, true);
+
+        window.addEventListener('pointerdown', (e) => {
+            if (e.button !== 0 || !container.contains(e.target)) return;
+            if (transformControls.axis) {
+                if (selectedObject !== preSelection) selectObject(preSelection);
+                return;
+            }
+            if (!selectedObject || !selectedObject.userData || !selectedObject.userData.importedRoot) return;
+            const rc = new THREE.Raycaster();
+            rc.setFromCamera(pointerToNDC(e), camera);
+            const hit = rc.intersectObject(selectedObject, true).find(h => h.object.isMesh);
+            if (hit) selectObject(hit.object);
+        });
+
+        const baseBuildLight = buildLight;
+        buildLight = function (type) {
+            const light = baseBuildLight(type);
+            const icon = light.userData.icon;
+            if (icon) {
+                const baseRaycast = icon.raycast.bind(icon);
+                icon.raycast = function (raycaster, intersects) {
+                    if (this.visible) baseRaycast(raycaster, intersects);
+                };
+                icon.visible = gridHelper.visible;
+            }
+            return light;
+        };
+
+        const baseToggleGrid = toggleGrid;
+        toggleGrid = function () {
+            baseToggleGrid();
+            const visible = gridHelper.visible;
+            originHelper.visible = visible;
+            objects.forEach(o => {
+                if (o.isLight && o.userData.icon) o.userData.icon.visible = visible;
+            });
+        };
+
+        updateOutliner();
+        renderTexturesSection();
+        syncPointLightWindow();
+        updateRangeGizmo();
     </script>
 </body>
 </html>
