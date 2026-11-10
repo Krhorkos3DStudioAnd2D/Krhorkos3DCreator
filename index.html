@@ -14,13 +14,17 @@
             --bg-dark: #1d1d1d;
             --bg-panel: #282828;
             --bg-header: #181818;
+            --bg-card: #2e2e2e;
             --accent: #e67e22;
             --accent-hover: #d35400;
             --text: #cccccc;
             --text-bright: #ffffff;
+            --text-dim: #888888;
             --border: #383838;
             --font-size-base: 13px;
             --panel-spacing: 12px;
+            --badge-nuevo: #27ae60;
+            --badge-mejora: #3498db;
         }
 
         * {
@@ -201,33 +205,6 @@
             background-color: var(--accent-hover);
         }
 
-        .links-list {
-            list-style: none;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 10px;
-        }
-
-        .links-list li a {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--border);
-            padding: 10px 12px;
-            border-radius: 4px;
-            color: var(--text-bright);
-            text-decoration: none;
-            transition: background 0.1s, border-color 0.1s;
-            font-size: 12px;
-        }
-
-        .links-list li a:hover {
-            background: rgba(255, 255, 255, 0.06);
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
         .social-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -272,6 +249,181 @@
             justify-content: center;
             padding: 10px 0;
         }
+
+        /* ===== VENTANA FLOTANTE ===== */
+        .floating-window {
+            position: fixed;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+            z-index: 200;
+            display: none;
+            flex-direction: column;
+            min-width: 340px;
+            min-height: 200px;
+            max-width: 700px;
+            color: var(--text);
+            overflow: hidden;
+        }
+        .floating-window.visible { display: flex; }
+        .floating-window .fw-header {
+            background: var(--bg-header);
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: move;
+            border-bottom: 1px solid var(--border);
+            user-select: none;
+        }
+        .floating-window .fw-title {
+            font-weight: bold;
+            font-size: 12px;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .floating-window .fw-close {
+            background: #c0392b;
+            color: #fff;
+            border: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            padding: 0;
+        }
+        .floating-window .fw-close:hover { background: #e74c3c; }
+        .floating-window .fw-body {
+            padding: 15px;
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .floating-window .fw-resize {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            right: 0;
+            bottom: 0;
+            cursor: nwse-resize;
+            background: linear-gradient(135deg, transparent 50%, var(--accent) 50%);
+            opacity: 0.6;
+        }
+        .floating-window .fw-resize:hover { opacity: 1; }
+
+        .novedad-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .novedad-card .card-header {
+            background-color: rgba(0, 0, 0, 0.25);
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 15px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .novedad-card .card-header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .novedad-card .card-title {
+            color: var(--text-bright);
+            font-size: 16px;
+            font-weight: bold;
+            line-height: 1.3;
+        }
+
+        .novedad-card .card-date {
+            color: var(--text-dim);
+            font-size: 11px;
+        }
+
+        .novedad-card .card-version {
+            background-color: var(--accent);
+            color: #ffffff;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .novedad-card .card-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .novedad-card .card-image {
+            width: 100%;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background-color: var(--bg-panel);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .novedad-card .card-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+            max-height: 320px;
+            object-fit: cover;
+        }
+
+        .novedad-card .card-description {
+            color: var(--text);
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-line;
+        }
+
+        .novedad-card .tags-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 5px;
+        }
+
+        .novedad-card .tag {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+        }
+
+        .tag-nuevo { background-color: var(--badge-nuevo); }
+        .tag-mejora { background-color: var(--badge-mejora); }
     </style>
 </head>
 <body>
@@ -286,8 +438,8 @@
 
     <main>
         <section class="welcome-hero">
-            <h1>Bienvenido a Krhorkos 3D & 2D Studio.</h1>
-            <p>Estudio de desarrollo, Enfocado en Juegos 3D.</p>
+            <h1>Bienvenido a Krhorkos 3D & 2D Studio</h1>
+            <p>Estudio de desarrollo multimedia enfocado en la creación de herramientas de modelado tridimensional, edición bidimensional avanzada y entornos digitales interactivos accesibles desde la web.</p>
         </section>
 
         <section class="section-container">
@@ -296,17 +448,17 @@
                 <div class="tools-grid">
                     <div class="action-card">
                         <h3>Editor 3D</h3>
-                        <p>Creacion de Escenas 3D</p>
+                        <p>Modelado de mallas, transformaciones espaciales, mapas normales, texturas y exportación de proyectos 3D.</p>
                         <a href="3dcreator.html" class="btn-primary-custom">Abrir Editor 3D</a>
                     </div>
                     <div class="action-card">
                         <h3>Editor de Imágenes</h3>
-                        <p>Creacion De Atlas Para Modelado en 3D.</p>
+                        <p>Manipulación fotográfica 2D, capas, filtros, efectos y herramientas profesionales de dibujo e ilustración.</p>
                         <a href="imageneditor.html" class="btn-primary-custom">Abrir Editor de Imágenes</a>
                     </div>
                 </div>
                 <div class="novedades-container">
-                    <a href="Novedades.html" target="_blank" class="btn-primary-custom">📢 NOVEDADES</a>
+                    <button class="btn-primary-custom" onclick="openNovedades()">📢 NOVEDADES</button>
                 </div>
             </div>
         </section>
@@ -334,8 +486,112 @@
 
     <footer>
         <span>Estado del Sistema: En Línea</span>
-        <span>&copy; 2026 Krhorkos3DStudioAnd2D </span>
+        <span>Krhorkos 3D & 2D Studio &copy; 2026</span>
     </footer>
+
+    <!-- ===== VENTANA FLOTANTE DE NOVEDADES ===== -->
+    <div id="novedades-window" class="floating-window" style="width: 620px; height: 540px; top: 80px; left: 50%; transform: translateX(-50%);">
+        <div class="fw-header">
+            <span class="fw-title">📢 Novedades</span>
+            <button class="fw-close" onclick="closeNovedades()">✕</button>
+        </div>
+        <div class="fw-body">
+            <article class="novedad-card">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="card-title">NOVEDADES DE LA VERSIÓN 1.9</div>
+                        <div class="card-date">📅 10 de noviembre del 2026 — 04:25 PM</div>
+                    </div>
+                    <div class="card-version">Versión 1.9</div>
+                </div>
+                <div class="card-body">
+                    <div class="card-image">
+                        <img src="NOVEDAD_1.9.png" onerror="this.style.display='none'; this.parentElement.style.padding='40px 20px'; this.parentElement.innerHTML='<span style=\'color:#888; font-size:12px;\'>Imagen no disponible</span>';">
+                    </div>
+                    <div class="card-description">• Se implementó un sistema de cielo, con opción de cielo predeterminado en tonos grises y un cielo real con ciclo de día y noche
+• Se reorganizó la interfaz: la sección de Transformación ahora es accesible mediante un botón que abre su propia ventana
+• Nuevo sistema de sombreado: modo facetado por defecto, con opción de cambiar a suavizado desde el menú del clic derecho</div>
+                    <div class="tags-row">
+                        <span class="tag tag-nuevo">Nuevo</span>
+                        <span class="tag tag-mejora">Mejora</span>
+                    </div>
+                </div>
+            </article>
+        </div>
+        <div class="fw-resize" onmousedown="startResize(event, 'novedades-window')"></div>
+    </div>
+
+    <script>
+        function openNovedades() {
+            document.getElementById('novedades-window').classList.add('visible');
+        }
+
+        function closeNovedades() {
+            document.getElementById('novedades-window').classList.remove('visible');
+        }
+
+        function makeDraggable(win) {
+            const header = win.querySelector('.fw-header');
+            if (!header) return;
+            let isDragging = false;
+            let startX, startY, startLeft, startTop;
+
+            header.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.fw-close')) return;
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                startLeft = win.offsetLeft;
+                startTop = win.offsetTop;
+                e.preventDefault();
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                win.style.left = (startLeft + dx) + 'px';
+                win.style.top = (startTop + dy) + 'px';
+                win.style.transform = 'none';
+            });
+
+            window.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+        }
+
+        let activeResize = null;
+        let resizeStart = null;
+
+        function startResize(e, winId) {
+            e.preventDefault();
+            e.stopPropagation();
+            const win = document.getElementById(winId);
+            activeResize = win;
+            resizeStart = {
+                x: e.clientX,
+                y: e.clientY,
+                w: win.offsetWidth,
+                h: win.offsetHeight
+            };
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            if (!activeResize) return;
+            const dx = e.clientX - resizeStart.x;
+            const dy = e.clientY - resizeStart.y;
+            const newW = Math.max(340, resizeStart.w + dx);
+            const newH = Math.max(200, resizeStart.h + dy);
+            activeResize.style.width = newW + 'px';
+            activeResize.style.height = newH + 'px';
+        });
+
+        window.addEventListener('mouseup', () => {
+            activeResize = null;
+        });
+
+        makeDraggable(document.getElementById('novedades-window'));
+    </script>
 
 </body>
 </html>
