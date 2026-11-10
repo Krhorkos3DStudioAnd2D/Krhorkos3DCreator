@@ -40,7 +40,6 @@
             font-size: var(--font-size-base);
         }
 
-        /* Encabezado unificado idéntico a las herramientas */
         header {
             height: 38px;
             background-color: var(--bg-header);
@@ -88,7 +87,6 @@
             background-color: #219150;
         }
 
-        /* Contenedor principal estilo panel de estudio */
         main {
             margin-top: 50px;
             padding: 20px;
@@ -125,7 +123,6 @@
             line-height: 1.5;
         }
 
-        /* Secciones del Sitio */
         .section-container {
             background-color: var(--bg-panel);
             border: 1px solid var(--border);
@@ -149,7 +146,6 @@
             padding: 15px;
         }
 
-        /* Cuadrículas de botones y tarjetas */
         .tools-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -205,7 +201,6 @@
             background-color: var(--accent-hover);
         }
 
-        /* Listas y enlaces estándar */
         .links-list {
             list-style: none;
             display: grid;
@@ -233,7 +228,6 @@
             color: var(--accent);
         }
 
-        /* Redes Sociales Grid */
         .social-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -260,7 +254,6 @@
             color: #fff;
         }
 
-        /* Barra de estado inferior unificada */
         footer {
             height: 26px;
             background: var(--bg-header);
@@ -273,11 +266,16 @@
             font-size: 11px;
             margin-top: auto;
         }
+
+        .novedades-container {
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Encabezado Principal -->
     <header>
         <div class="logo">Krhorkos 3D & 2D Studio</div>
         <div class="header-controls">
@@ -286,34 +284,33 @@
         </div>
     </header>
 
-    <!-- Contenido Principal -->
     <main>
-        <!-- 1. Título principal y presentación del estudio -->
         <section class="welcome-hero">
-            <h1>Bienvenido a Krhorkos 3D & 2D Studio</h1>
-            <p>Estudio de desarrollo multimedia enfocado en la creación de herramientas de modelado tridimensional, edición bidimensional avanzada y entornos digitales interactivos accesibles desde la web.</p>
+            <h1>Bienvenido a Krhorkos 3D & 2D Studio.</h1>
+            <p>Estudio de desarrollo, Enfocado en Juegos 3D.</p>
         </section>
 
-        <!-- Sección 1: Herramientas -->
         <section class="section-container">
             <div class="section-title">1. Herramientas de Creación</div>
             <div class="section-content">
                 <div class="tools-grid">
                     <div class="action-card">
                         <h3>Editor 3D</h3>
-                        <p>Modelado de mallas, transformaciones espaciales, mapas normales, texturas y exportación de proyectos 3D.</p>
+                        <p>Creacion de Escenas 3D</p>
                         <a href="3dcreator.html" class="btn-primary-custom">Abrir Editor 3D</a>
                     </div>
                     <div class="action-card">
                         <h3>Editor de Imágenes</h3>
-                        <p>Manipulación fotográfica 2D, capas, filtros, efectos y herramientas profesionales de dibujo e ilustración.</p>
+                        <p>Creacion De Atlas Para Modelado en 3D.</p>
                         <a href="imageneditor.html" class="btn-primary-custom">Abrir Editor de Imágenes</a>
                     </div>
+                </div>
+                <div class="novedades-container">
+                    <a href="Novedades.html" target="_blank" class="btn-primary-custom">📢 NOVEDADES</a>
                 </div>
             </div>
         </section>
 
-        <!-- Sección 4: Redes Sociales -->
         <section class="section-container">
             <div class="section-title">4. Redes Sociales Oficiales</div>
             <div class="section-content">
@@ -335,10 +332,9 @@
         </section>
     </main>
 
-    <!-- Barra de Estado Inferior -->
     <footer>
         <span>Estado del Sistema: En Línea</span>
-        <span>Krhorkos 3D & 2D Studio &copy; 2026</span>
+        <span>&copy; 2026 Krhorkos3DStudioAnd2D </span>
     </footer>
 
 </body>
