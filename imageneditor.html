@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <link rel="icon" type="image/png" href="LOGO_2D.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor de Imágenes y Atlas de Texturas</title>
+    <title>Editor de Imágenes y Atlas de Texturas v1.8</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -12,58 +12,207 @@
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #2b2b2b; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
-        
-        .win-modal {
-            background-color: #c0c0c0;
-            border: 2px solid #ffffff;
-            border-right-color: #000000;
-            border-bottom-color: #000000;
-            box-shadow: 4px 4px 10px rgba(0,0,0,0.5);
-            color: #000;
-            font-family: 'Tahoma', 'Segoe UI', sans-serif;
+
+        .floating-window {
+            position: fixed;
+            background-color: #2b2b2b;
+            border: 1px solid #3f3f46;
+            border-radius: 8px;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.7);
+            color: #f3f4f6;
+            display: none;
+            flex-direction: column;
+            min-width: 320px;
+            min-height: 180px;
+            z-index: 60;
+            overflow: hidden;
+            resize: both;
+            font-family: 'Inter', sans-serif;
         }
-        .win-titlebar {
-            background: linear-gradient(90deg, #000080, #1084d0);
-            color: white;
-            padding: 3px 6px;
-            font-weight: bold;
-            font-size: 12px;
+        .floating-window.visible { display: flex; }
+        .floating-window .fw-header {
+            background: #1e1e1e;
+            padding: 10px 14px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
+            cursor: move;
+            border-bottom: 1px solid #3f3f46;
+            user-select: none;
         }
-        .win-btn {
-            background-color: #c0c0c0;
-            border: 2px solid #ffffff;
-            border-right-color: #404040;
-            border-bottom-color: #404040;
-            padding: 2px 8px;
-            font-size: 11px;
-            font-weight: bold;
-            color: #000;
+        .floating-window .fw-title {
+            font-weight: 700;
+            font-size: 12px;
+            color: #e67e22;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+        .floating-window .fw-close {
+            background: #c0392b;
+            color: #ffffff;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            padding: 0;
+            transition: background 0.15s;
         }
-        .win-btn:active {
-            border: 2px solid #404040;
-            border-right-color: #ffffff;
-            border-bottom-color: #ffffff;
+        .floating-window .fw-close:hover { background: #e74c3c; }
+        .floating-window .fw-body {
+            padding: 14px;
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
+        .floating-window .fw-resize {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            right: 0;
+            bottom: 0;
+            cursor: nwse-resize;
+            background: linear-gradient(135deg, transparent 50%, #e67e22 50%);
+            opacity: 0.7;
+        }
+        .floating-window .fw-resize:hover { opacity: 1; }
+
+        .fw-btn {
+            background-color: #3f3f46;
+            color: #f3f4f6;
+            border: 1px solid #52525b;
+            padding: 10px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            transition: background 0.15s, border-color 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+        }
+        .fw-btn:hover { background-color: #52525b; border-color: #e67e22; }
+        .fw-btn-danger { background-color: #c0392b; border-color: #e74c3c; color: #ffffff; }
+        .fw-btn-danger:hover { background-color: #e74c3c; }
+        .fw-btn-blue { background-color: #2980b9; border-color: #3498db; color: #ffffff; }
+        .fw-btn-blue:hover { background-color: #3498db; }
+        .fw-btn-green { background-color: #27ae60; border-color: #2ecc71; color: #ffffff; }
+        .fw-btn-green:hover { background-color: #2ecc71; }
+        .fw-btn-orange { background-color: #e67e22; border-color: #d35400; color: #ffffff; }
+        .fw-btn-orange:hover { background-color: #d35400; }
+
+        .fw-section {
+            background-color: #1e1e1e;
+            border: 1px solid #3f3f46;
+            border-radius: 6px;
+            padding: 10px;
+        }
+        .fw-label {
+            font-size: 11px;
+            color: #a1a1aa;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 6px;
+            display: block;
+        }
+        .fw-toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .fw-toggle-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #f3f4f6;
+        }
+        .fw-toggle-btn {
+            padding: 5px 14px;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            background-color: #52525b;
+            color: #ffffff;
+            transition: background 0.15s;
+        }
+        .fw-toggle-btn.on { background-color: #27ae60; }
+        .fw-toggle-btn.off { background-color: #52525b; }
+
+        .grid-cell-btn {
+            position: absolute;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            z-index: 10;
+        }
+        .grid-cell-btn:hover {
+            background: rgba(230, 126, 34, 0.25);
+            outline: 2px solid #e67e22;
+            outline-offset: -2px;
+        }
+        .grid-cell-btn.has-content:hover {
+            background: rgba(192, 57, 43, 0.3);
+            outline: 2px solid #e74c3c;
+            outline-offset: -2px;
+        }
+
+        input[type="range"] { accent-color: #e67e22; }
+
+        #canvasContainer.drag-over {
+            outline: 3px dashed #e67e22;
+            outline-offset: -6px;
+            background: rgba(230, 126, 34, 0.08);
+        }
+
+        .toast-msg {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #c0392b;
+            color: #fff;
+            padding: 12px 22px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 999;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+            display: none;
+        }
+        .toast-msg.visible { display: block; }
+        .toast-msg.success { background: #27ae60; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
     <header class="bg-[#2b2b2b] border-b border-[#3f3f46] px-6 py-4 flex items-center justify-between shadow-md">
         <div class="flex items-center space-x-3">
-            <div class="bg-indigo-600 p-2 rounded-lg text-white">
+            <div class="bg-[#e67e22] p-2 rounded-lg text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-5zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-5z" />
                 </svg>
             </div>
             <div>
                 <h1 class="text-lg font-bold text-white">Editor de Imágenes y Atlas de Texturas</h1>
-                <p class="text-xs text-indigo-400 font-semibold">Herramienta de Krhorkos3DStudioAnd2D</p>
+                <p class="text-xs text-[#e67e22] font-semibold">Herramienta de Krhorkos3DStudioAnd2D</p>
             </div>
         </div>
         <div class="flex items-center space-x-3">
+            <div id="spaceCounter" class="bg-[#1e1e1e] border border-[#3f3f46] rounded-lg px-4 py-2 text-xs font-bold text-zinc-200">
+                Espacios usados: <span id="usedSpaces" class="text-[#e67e22]">0</span>/<span id="totalSpaces">16</span>
+            </div>
             <button onclick="clearAllTextures()" class="bg-zinc-700 hover:bg-zinc-600 text-xs px-3 py-2 rounded-lg font-medium transition text-zinc-200">Limpiar Todo</button>
         </div>
     </header>
@@ -83,6 +232,7 @@
                 <div id="canvasContainer" class="flex-1 overflow-auto custom-scrollbar flex items-center justify-center bg-[#18181b] rounded-lg relative min-h-[350px]">
                     <div id="viewportWrapper" class="relative transition-transform duration-100 origin-center">
                         <canvas id="atlasCanvas" class="shadow-2xl bg-transparent block"></canvas>
+                        <div id="gridOverlay" class="absolute inset-0 pointer-events-none"></div>
                     </div>
                 </div>
             </div>
@@ -112,28 +262,28 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="text-xs text-zinc-400 block mb-1">Columnas</label>
-                        <input type="number" id="gridCols" min="1" max="16" value="4" oninput="updateGridConfig()" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <input type="number" id="gridCols" min="1" max="16" value="4" oninput="updateGridConfig()" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#e67e22]">
                     </div>
                     <div>
                         <label class="text-xs text-zinc-400 block mb-1">Filas</label>
-                        <input type="number" id="gridRows" min="1" max="16" value="4" oninput="updateGridConfig()" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <input type="number" id="gridRows" min="1" max="16" value="4" oninput="updateGridConfig()" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#e67e22]">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="text-xs text-zinc-400 block mb-1">Ancho Celda (px)</label>
-                        <input type="number" id="cellWidth" min="16" max="1024" value="128" oninput="updateGridConfig()" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <input type="number" id="cellWidth" min="16" max="1024" value="128" oninput="updateGridConfig()" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#e67e22]">
                     </div>
                     <div>
                         <label class="text-xs text-zinc-400 block mb-1">Alto Celda (px)</label>
-                        <input type="number" id="cellHeight" min="16" max="1024" value="128" oninput="updateGridConfig()" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <input type="number" id="cellHeight" min="16" max="1024" value="128" oninput="updateGridConfig()" onchange="updateGridConfig()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#e67e22]">
                     </div>
                 </div>
             </div>
 
             <div class="bg-[#2b2b2b] border border-[#3f3f46] rounded-xl p-5 shadow-lg flex flex-col gap-4">
                 <h2 class="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Importar Imágenes</h2>
-                <button onclick="document.getElementById('fileInput').click()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-lg transition text-xs flex items-center justify-center gap-2">
+                <button onclick="document.getElementById('fileInput').click()" class="w-full bg-[#e67e22] hover:bg-[#d35400] text-white font-medium py-2.5 rounded-lg transition text-xs flex items-center justify-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
@@ -144,26 +294,14 @@
 
             <div class="bg-[#2b2b2b] border border-[#3f3f46] rounded-xl p-5 shadow-lg flex flex-col gap-4">
                 <h2 class="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Filtros y Efectos</h2>
-                <button onclick="openFilterWindow()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-medium py-2 rounded-lg transition text-xs flex items-center justify-center gap-2">
+                <button onclick="openFilterWindow()" class="w-full bg-[#e67e22] hover:bg-[#d35400] text-white font-medium py-2 rounded-lg transition text-xs flex items-center justify-center gap-2">
                     🎛️ Abrir Ventana de Filtros
                 </button>
             </div>
 
             <div class="bg-[#2b2b2b] border border-[#3f3f46] rounded-xl p-5 shadow-lg flex flex-col gap-4">
-                <h2 class="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Gestión de Proyectos</h2>
-                <div class="flex flex-col gap-2">
-                    <button onclick="openSaveModal()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-medium py-2 rounded-lg transition text-xs flex items-center justify-center gap-2">
-                        💾 Guardar Proyecto
-                    </button>
-                    <button onclick="openLoadModal()" class="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-medium py-2 rounded-lg transition text-xs flex items-center justify-center gap-2">
-                        📂 Cargar Proyecto
-                    </button>
-                </div>
-            </div>
-
-            <div class="bg-[#2b2b2b] border border-[#3f3f46] rounded-xl p-5 shadow-lg flex flex-col gap-4">
                 <h2 class="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Información</h2>
-                <button onclick="openShortcutsWindow()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 rounded-lg transition text-xs flex items-center justify-center gap-2">
+                <button onclick="openShortcutsWindow()" class="w-full bg-[#e67e22] hover:bg-[#d35400] text-white font-medium py-2 rounded-lg transition text-xs flex items-center justify-center gap-2">
                     ⌨️ Atajos
                 </button>
             </div>
@@ -172,7 +310,7 @@
                 <h2 class="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Opciones de Exportación</h2>
                 <div>
                     <label class="text-xs text-zinc-400 block mb-1">Formato</label>
-                    <select id="exportFormat" onchange="updateStats()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    <select id="exportFormat" onchange="updateStats()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#e67e22]">
                         <option value="image/png">PNG</option>
                         <option value="image/jpeg">JPEG</option>
                         <option value="image/webp">WebP</option>
@@ -180,18 +318,18 @@
                 </div>
                 <div>
                     <label class="text-xs text-zinc-400 block mb-1">Calidad (<span id="qualityVal">90</span>%)</label>
-                    <input type="range" id="exportQuality" min="10" max="100" value="90" oninput="document.getElementById('qualityVal').innerText=this.value; updateStats();" class="w-full accent-indigo-600">
+                    <input type="range" id="exportQuality" min="10" max="100" value="90" oninput="document.getElementById('qualityVal').innerText=this.value; updateStats();" class="w-full">
                 </div>
                 <div>
                     <label class="text-xs text-zinc-400 block mb-1">Escala</label>
-                    <select id="exportScale" onchange="updateStats()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    <select id="exportScale" onchange="updateStats()" class="w-full bg-[#1e1e1e] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#e67e22]">
                         <option value="1">1x (Original)</option>
                         <option value="0.5">0.5x (Mitad)</option>
                         <option value="2">2x (Doble)</option>
                     </select>
                 </div>
 
-                <button onclick="exportAtlas()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-3 rounded-xl shadow-lg transition text-xs flex items-center justify-center gap-2 mt-2">
+                <button onclick="exportAtlas()" class="w-full bg-[#27ae60] hover:bg-[#2ecc71] text-white font-medium py-3 rounded-xl shadow-lg transition text-xs flex items-center justify-center gap-2 mt-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
@@ -201,151 +339,93 @@
         </aside>
     </main>
 
-    <div id="filterWin" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div class="win-modal w-80 p-1">
-            <div class="win-titlebar">
-                <span>Filtros.exe</span>
-                <button onclick="closeFilterWindow()" class="win-btn px-1 py-0 text-[9px]">X</button>
+    <div id="filterWin" class="floating-window" style="width: 400px; height: 520px; top: 100px; left: 50%; transform: translateX(-50%);">
+        <div class="fw-header">
+            <span class="fw-title">🎛️ Filtros y Efectos</span>
+            <button class="fw-close" onclick="closeFilterWindow()">✕</button>
+        </div>
+        <div class="fw-body">
+            <div class="fw-section">
+                <div class="fw-toggle-row">
+                    <span class="fw-toggle-label">Escala de Grises</span>
+                    <button id="btnGrayscaleToggle" onclick="toggleGrayscale()" class="fw-toggle-btn off">OFF</button>
+                </div>
             </div>
-            <div class="p-4 flex flex-col gap-3">
-                <p class="text-xs font-semibold mb-1">Seleccione los efectos a aplicar sobre el Grid:</p>
-                
-                <div class="flex items-center justify-between bg-gray-200 p-2 border border-gray-400">
-                    <span class="text-xs font-bold">Escala de Grises</span>
-                    <button id="btnGrayscaleToggle" onclick="toggleGrayscale()" class="px-3 py-1 text-xs font-bold text-white bg-gray-500 rounded border border-black transition">
-                        OFF
-                    </button>
+            <div class="fw-section">
+                <div class="fw-toggle-row">
+                    <span class="fw-toggle-label">Invertir Colores</span>
+                    <button id="btnInvertToggle" onclick="toggleInvert()" class="fw-toggle-btn off">OFF</button>
                 </div>
-
-                <div class="flex items-center justify-between bg-gray-200 p-2 border border-gray-400">
-                    <span class="text-xs font-bold">Invertir Colores</span>
-                    <button id="btnInvertToggle" onclick="toggleInvert()" class="px-3 py-1 text-xs font-bold text-white bg-gray-500 rounded border border-black transition">
-                        OFF
-                    </button>
+            </div>
+            <div class="fw-section">
+                <div class="fw-toggle-row">
+                    <span class="fw-toggle-label">Estilo Boceto</span>
+                    <button id="btnSketchToggle" onclick="toggleSketch()" class="fw-toggle-btn off">OFF</button>
                 </div>
-
-                <div class="flex items-center justify-between bg-gray-200 p-2 border border-gray-400">
-                    <span class="text-xs font-bold">Estilo Boceto</span>
-                    <button id="btnSketchToggle" onclick="toggleSketch()" class="px-3 py-1 text-xs font-bold text-white bg-gray-500 rounded border border-black transition">
-                        OFF
-                    </button>
+            </div>
+            <div class="fw-section">
+                <div class="fw-toggle-row" style="margin-bottom:8px;">
+                    <span class="fw-toggle-label">Borroso</span>
+                    <button id="btnBlurToggle" onclick="toggleBlur()" class="fw-toggle-btn off">OFF</button>
                 </div>
-
-                <div class="flex flex-col gap-2 bg-gray-200 p-2 border border-gray-400">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold">Borroso</span>
-                        <button id="btnBlurToggle" onclick="toggleBlur()" class="px-3 py-1 text-xs font-bold text-white bg-gray-500 rounded border border-black transition">
-                            OFF
-                        </button>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-[11px] font-bold">Intensidad:</span>
-                        <input type="range" id="blurIntensity" min="1" max="30" value="4" oninput="setBlurIntensity(this.value)" class="flex-1">
-                        <span id="blurIntensityVal" class="text-[11px] font-bold w-8 text-right">4</span>
-                    </div>
+                <label class="fw-label">Intensidad: <span id="blurIntensityVal">4</span></label>
+                <input type="range" id="blurIntensity" min="1" max="30" value="4" oninput="setBlurIntensity(this.value)" class="w-full">
+            </div>
+            <div class="fw-section">
+                <div class="fw-toggle-row" style="margin-bottom:8px;">
+                    <span class="fw-toggle-label">Pixeleado</span>
+                    <button id="btnPixelToggle" onclick="togglePixel()" class="fw-toggle-btn off">OFF</button>
                 </div>
-
-                <div class="flex flex-col gap-2 bg-gray-200 p-2 border border-gray-400">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold">Pixeleado</span>
-                        <button id="btnPixelToggle" onclick="togglePixel()" class="px-3 py-1 text-xs font-bold text-white bg-gray-500 rounded border border-black transition">
-                            OFF
-                        </button>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-[11px] font-bold">Intensidad:</span>
-                        <input type="range" id="pixelIntensity" min="2" max="64" value="8" oninput="setPixelIntensity(this.value)" class="flex-1">
-                        <span id="pixelIntensityVal" class="text-[11px] font-bold w-8 text-right">8</span>
-                    </div>
-                </div>
-
-                <div class="flex justify-end gap-2 pt-2 border-t border-gray-400 mt-2">
-                    <button onclick="closeFilterWindow()" class="win-btn">Aceptar</button>
+                <label class="fw-label">Intensidad: <span id="pixelIntensityVal">8</span></label>
+                <input type="range" id="pixelIntensity" min="2" max="64" value="8" oninput="setPixelIntensity(this.value)" class="w-full">
+            </div>
+            <div class="fw-section">
+                <label class="fw-label">Saturación de imagen: <span id="saturationVal">100%</span></label>
+                <input type="range" id="saturationRange" min="0" max="500" value="100" oninput="setSaturation(this.value)" class="w-full">
+                <div class="flex justify-between text-[10px] text-zinc-500 mt-1">
+                    <span>0%</span>
+                    <span>100%</span>
+                    <span>500%</span>
                 </div>
             </div>
         </div>
+        <div class="fw-resize"></div>
     </div>
 
-    <div id="shortcutsWin" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div class="win-modal w-80 p-1">
-            <div class="win-titlebar">
-                <span>Atajos.exe</span>
-                <button onclick="closeShortcutsWindow()" class="win-btn px-1 py-0 text-[9px]">X</button>
-            </div>
-            <div class="p-4 flex flex-col gap-3">
-                <p class="text-xs font-semibold mb-1">Atajos del sistema:</p>
-                
-                <div class="flex flex-col gap-2 bg-gray-200 p-3 border border-gray-400 text-xs">
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold">Ctrl + Z</span>
-                        <span>Deshacer</span>
-                    </div>
-                    <div class="flex justify-between items-center border-t border-gray-300 pt-2">
-                        <span class="font-bold">Ctrl + Shift + Z</span>
-                        <span>Rehacer</span>
-                    </div>
-                    <div class="flex justify-between items-center border-t border-gray-300 pt-2">
-                        <span class="font-bold">Ctrl + S</span>
-                        <span>Guardar proyecto</span>
-                    </div>
-                    <div class="flex justify-between items-center border-t border-gray-300 pt-2">
-                        <span class="font-bold">Ctrl + Shift + S</span>
-                        <span>Cargar última sesión</span>
-                    </div>
+    <div id="shortcutsWin" class="floating-window" style="width: 360px; height: 260px; top: 120px; left: 50%; transform: translateX(-50%);">
+        <div class="fw-header">
+            <span class="fw-title">⌨️ Atajos del Sistema</span>
+            <button class="fw-close" onclick="closeShortcutsWindow()">✕</button>
+        </div>
+        <div class="fw-body">
+            <div class="fw-section">
+                <div class="flex justify-between items-center py-1 border-b border-zinc-700">
+                    <span class="text-xs font-bold text-[#e67e22]">Ctrl + Z</span>
+                    <span class="text-xs text-zinc-300">Deshacer</span>
                 </div>
-
-                <div class="flex justify-end gap-2 pt-2 border-t border-gray-400 mt-2">
-                    <button onclick="closeShortcutsWindow()" class="win-btn">Aceptar</button>
+                <div class="flex justify-between items-center py-1">
+                    <span class="text-xs font-bold text-[#e67e22]">Ctrl + Shift + Z</span>
+                    <span class="text-xs text-zinc-300">Rehacer</span>
                 </div>
             </div>
         </div>
+        <div class="fw-resize"></div>
     </div>
 
-    <div id="saveModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div class="win-modal w-80 p-1">
-            <div class="win-titlebar">
-                <span>Guardar_Proyecto.exe</span>
-                <button onclick="closeSaveModal()" class="win-btn px-1 py-0 text-[9px]">X</button>
-            </div>
-            <div class="p-4 flex flex-col gap-3 text-xs">
-                <div>
-                    <label class="block font-bold mb-1">Nombre del archivo:</label>
-                    <input type="text" id="saveProjectName" value="proyecto_atlas" class="w-full bg-white border border-gray-600 px-2 py-1 text-black font-sans">
-                </div>
-                <div class="bg-gray-200 p-2 border border-gray-400 flex flex-col gap-1">
-                    <span><strong>Peso estimado:</strong> <span id="modalSaveWeight">0 B</span></span>
-                    <span><strong>Última edición:</strong> <span id="modalSaveDate">-</span></span>
-                </div>
-                <div class="flex justify-end gap-2 pt-2 border-t border-gray-400 mt-2">
-                    <button onclick="confirmSaveProject()" class="win-btn">Guardar</button>
-                    <button onclick="closeSaveModal()" class="win-btn">Cancelar</button>
-                </div>
-            </div>
+    <div id="cellOptionsWin" class="floating-window" style="width: 300px; height: 240px; top: 140px; left: 50%; transform: translateX(-50%);">
+        <div class="fw-header">
+            <span class="fw-title">📦 Opciones de Espacio</span>
+            <button class="fw-close" onclick="closeCellOptions()">✕</button>
         </div>
+        <div class="fw-body">
+            <p id="cellOptionsTitle" class="text-xs text-zinc-400 mb-2">Espacio seleccionado</p>
+            <button onclick="addTextureToCell()" class="fw-btn fw-btn-blue">📂 Agregar textura</button>
+            <button onclick="deleteTextureFromCell()" class="fw-btn fw-btn-danger">🗑️ Borrar textura</button>
+        </div>
+        <div class="fw-resize"></div>
     </div>
 
-    <div id="loadModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div class="win-modal w-90 p-1">
-            <div class="win-titlebar">
-                <span>Cargar_Proyecto.exe</span>
-                <button onclick="closeLoadModal()" class="win-btn px-1 py-0 text-[9px]">X</button>
-            </div>
-            <div class="p-4 flex flex-col gap-3 text-xs">
-                <label class="block font-bold">Seleccionar proyecto guardado:</label>
-                <div id="projectListContainer" class="bg-white border border-gray-600 h-32 overflow-y-auto text-black p-1 flex flex-col gap-1">
-                </div>
-                <div class="bg-gray-200 p-2 border border-gray-400 flex flex-col gap-1">
-                    <span><strong>Nombre:</strong> <span id="modalLoadName">-</span></span>
-                    <span><strong>Peso:</strong> <span id="modalLoadWeight">-</span></span>
-                    <span><strong>Fecha:</strong> <span id="modalLoadDate">-</span></span>
-                </div>
-                <div class="flex justify-end gap-2 pt-2 border-t border-gray-400 mt-2">
-                    <button onclick="confirmLoadProject()" class="win-btn">Cargar</button>
-                    <button onclick="closeLoadModal()" class="win-btn">Cancelar</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div id="toastMsg" class="toast-msg"></div>
 
     <script>
         let gridCols = 4;
@@ -353,10 +433,9 @@
         let cellWidth = 128;
         let cellHeight = 128;
         let textures = {};
+        let colors = {};
         let currentZoom = 1;
-        let qualityMultiplier = 1.0;
-        let filteringMode = 'pixel';
-        
+
         let isGrayscaleActive = false;
         let isInvertActive = false;
         let isSketchActive = false;
@@ -364,7 +443,7 @@
         let isPixelActive = false;
         let blurIntensity = 4;
         let pixelIntensity = 8;
-        let lastEditDate = new Date().toLocaleString();
+        let saturationValue = 100;
 
         let historyStack = [];
         let redoStack = [];
@@ -372,6 +451,7 @@
         const canvas = document.getElementById('atlasCanvas');
         const ctx = canvas.getContext('2d');
         const container = document.getElementById('canvasContainer');
+        const gridOverlay = document.getElementById('gridOverlay');
 
         let initialPinchDistance = null;
         let isPanning = false;
@@ -380,18 +460,146 @@
         let containerScrollLeft = 0;
         let containerScrollTop = 0;
 
+        let selectedCellKey = null;
+
         window.addEventListener('DOMContentLoaded', () => {
             updateGridConfig();
             setupPasteListener();
             setupTouchZoom();
             setupPanListener();
             setupKeyboardShortcuts();
+            setupAllDraggable();
+            setupDragAndDrop();
+            updateSpaceCounter();
         });
 
+        function showToast(msg, isSuccess) {
+            const toast = document.getElementById('toastMsg');
+            toast.innerText = msg;
+            toast.className = 'toast-msg visible' + (isSuccess ? ' success' : '');
+            setTimeout(() => {
+                toast.classList.remove('visible');
+            }, 2800);
+        }
+
+        function updateSpaceCounter() {
+            const total = gridCols * gridRows;
+            let used = 0;
+            for (let r = 0; r < gridRows; r++) {
+                for (let c = 0; c < gridCols; c++) {
+                    const key = `${c}-${r}`;
+                    if (textures[key] || colors[key]) used++;
+                }
+            }
+            document.getElementById('usedSpaces').innerText = used;
+            document.getElementById('totalSpaces').innerText = total;
+        }
+
+        function setupDragAndDrop() {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                container.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+
+            container.addEventListener('dragenter', () => {
+                container.classList.add('drag-over');
+            });
+
+            container.addEventListener('dragleave', (e) => {
+                if (!container.contains(e.relatedTarget)) {
+                    container.classList.remove('drag-over');
+                }
+            });
+
+            container.addEventListener('drop', (e) => {
+                container.classList.remove('drag-over');
+                const files = e.dataTransfer.files;
+                if (!files || files.length === 0) return;
+
+                const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+                let validFiles = [];
+                let invalidCount = 0;
+
+                Array.from(files).forEach(file => {
+                    if (validTypes.includes(file.type.toLowerCase())) {
+                        validFiles.push(file);
+                    } else {
+                        invalidCount++;
+                    }
+                });
+
+                if (invalidCount > 0 && validFiles.length === 0) {
+                    showToast('El archivo no es una imagen válida (PNG, JPG, JPEG, GIF, WEBP)', false);
+                    return;
+                }
+
+                if (validFiles.length > 0) {
+                    saveState();
+                    validFiles.forEach(file => {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                            const img = new Image();
+                            img.onload = () => {
+                                assignToNextAvailableCell(img);
+                                updateSpaceCounter();
+                            };
+                            img.src = ev.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                    if (invalidCount > 0) {
+                        showToast(`Se agregaron ${validFiles.length} imagen(es). ${invalidCount} archivo(s) inválido(s) ignorado(s).`, true);
+                    } else {
+                        showToast(`${validFiles.length} imagen(es) agregada(s) correctamente`, true);
+                    }
+                }
+            });
+        }
+
+        function setupAllDraggable() {
+            ['filterWin', 'shortcutsWin', 'cellOptionsWin'].forEach(id => {
+                makeDraggable(document.getElementById(id));
+            });
+        }
+
+        function makeDraggable(win) {
+            if (!win) return;
+            const header = win.querySelector('.fw-header');
+            if (!header) return;
+            let isDragging = false;
+            let startX, startY, startLeft, startTop;
+
+            header.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.fw-close')) return;
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                startLeft = win.offsetLeft;
+                startTop = win.offsetTop;
+                win.style.transform = 'none';
+                e.preventDefault();
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                win.style.left = (startLeft + e.clientX - startX) + 'px';
+                win.style.top = (startTop + e.clientY - startY) + 'px';
+            });
+
+            window.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+        }
+
         function saveState() {
-            historyStack.push(JSON.parse(JSON.stringify(getTextureKeys())));
+            const state = {
+                textures: JSON.parse(JSON.stringify(getTextureKeys())),
+                colors: JSON.parse(JSON.stringify(colors))
+            };
+            historyStack.push(state);
             redoStack = [];
-            lastEditDate = new Date().toLocaleString();
         }
 
         function getTextureKeys() {
@@ -404,11 +612,14 @@
 
         function restoreState(state) {
             textures = {};
-            const keys = Object.keys(state);
+            colors = JSON.parse(JSON.stringify(state.colors || {}));
+            const keys = Object.keys(state.textures || {});
             let loaded = 0;
             if (keys.length === 0) {
                 redrawAtlas();
                 updateStats();
+                renderGridButtons();
+                updateSpaceCounter();
                 return;
             }
             keys.forEach(k => {
@@ -419,15 +630,21 @@
                     if (loaded === keys.length) {
                         redrawAtlas();
                         updateStats();
+                        renderGridButtons();
+                        updateSpaceCounter();
                     }
                 };
-                img.src = state[k];
+                img.src = state.textures[k];
             });
         }
 
         function undoAction() {
             if (historyStack.length > 0) {
-                redoStack.push(JSON.parse(JSON.stringify(getTextureKeys())));
+                const currentState = {
+                    textures: JSON.parse(JSON.stringify(getTextureKeys())),
+                    colors: JSON.parse(JSON.stringify(colors))
+                };
+                redoStack.push(currentState);
                 const prevState = historyStack.pop();
                 restoreState(prevState);
             }
@@ -435,7 +652,11 @@
 
         function redoAction() {
             if (redoStack.length > 0) {
-                historyStack.push(JSON.parse(JSON.stringify(getTextureKeys())));
+                const currentState = {
+                    textures: JSON.parse(JSON.stringify(getTextureKeys())),
+                    colors: JSON.parse(JSON.stringify(colors))
+                };
+                historyStack.push(currentState);
                 const nextState = redoStack.pop();
                 restoreState(nextState);
             }
@@ -445,222 +666,70 @@
             window.addEventListener('keydown', (e) => {
                 if (e.ctrlKey && e.key.toLowerCase() === 'z') {
                     e.preventDefault();
-                    if (e.shiftKey) {
-                        redoAction();
-                    } else {
-                        undoAction();
-                    }
-                }
-                if (e.ctrlKey && e.key.toLowerCase() === 's') {
-                    e.preventDefault();
-                    if (e.shiftKey) {
-                        loadLatestSession();
-                    } else {
-                        quickSaveProject();
-                    }
+                    if (e.shiftKey) redoAction();
+                    else undoAction();
                 }
             });
         }
 
         function openFilterWindow() {
-            document.getElementById('filterWin').classList.remove('hidden');
+            document.getElementById('filterWin').classList.add('visible');
         }
 
         function closeFilterWindow() {
-            document.getElementById('filterWin').classList.add('hidden');
+            document.getElementById('filterWin').classList.remove('visible');
         }
 
         function openShortcutsWindow() {
-            document.getElementById('shortcutsWin').classList.remove('hidden');
+            document.getElementById('shortcutsWin').classList.add('visible');
         }
 
         function closeShortcutsWindow() {
-            document.getElementById('shortcutsWin').classList.add('hidden');
+            document.getElementById('shortcutsWin').classList.remove('visible');
         }
 
-        function openSaveModal() {
-            document.getElementById('modalSaveDate').innerText = lastEditDate;
-            document.getElementById('modalSaveWeight').innerText = document.getElementById('infoWeight').innerText.replace('Peso estimado: ', '');
-            document.getElementById('saveModal').classList.remove('hidden');
-        }
-
-        function closeSaveModal() {
-            document.getElementById('saveModal').classList.add('hidden');
-        }
-
-        let selectedProjectName = null;
-
-        function openLoadModal() {
-            const containerList = document.getElementById('projectListContainer');
-            containerList.innerHTML = '';
-            const keys = Object.keys(localStorage).filter(k => k.startsWith('atlas_proj_'));
-            
-            if (keys.length === 0) {
-                containerList.innerHTML = '<span class="text-gray-500 p-1">No hay proyectos guardados.</span>';
-                document.getElementById('modalLoadName').innerText = '-';
-                document.getElementById('modalLoadWeight').innerText = '-';
-                document.getElementById('modalLoadDate').innerText = '-';
-                selectedProjectName = null;
+        function setToggleBtn(btn, on) {
+            if (on) {
+                btn.innerText = 'ON';
+                btn.className = 'fw-toggle-btn on';
             } else {
-                keys.forEach((k, idx) => {
-                    const data = JSON.parse(localStorage.getItem(k));
-                    const div = document.createElement('div');
-                    div.className = 'p-1 hover:bg-blue-200 cursor-pointer rounded';
-                    div.innerText = data.name;
-                    div.onclick = () => {
-                        document.querySelectorAll('#projectListContainer div').forEach(el => el.classList.remove('bg-blue-300'));
-                        div.classList.add('bg-blue-300');
-                        selectedProjectName = k;
-                        document.getElementById('modalLoadName').innerText = data.name;
-                        document.getElementById('modalLoadWeight').innerText = data.weight || 'Desconocido';
-                        document.getElementById('modalLoadDate').innerText = data.date || '-';
-                    };
-                    containerList.appendChild(div);
-                    if (idx === 0) div.click();
-                });
+                btn.innerText = 'OFF';
+                btn.className = 'fw-toggle-btn off';
             }
-            document.getElementById('loadModal').classList.remove('hidden');
-        }
-
-        function closeLoadModal() {
-            document.getElementById('loadModal').classList.add('hidden');
-        }
-
-        function quickSaveProject() {
-            const projData = {
-                name: 'proyecto_rapido',
-                cols: gridCols,
-                rows: gridRows,
-                cWidth: cellWidth,
-                cHeight: cellHeight,
-                textures: getTextureKeys(),
-                date: new Date().toLocaleString(),
-                weight: document.getElementById('infoWeight').innerText.replace('Peso estimado: ', '')
-            };
-            localStorage.setItem('atlas_proj_proyecto_rapido', JSON.stringify(projData));
-            alert('Proyecto guardado rápidamente (Ctrl + S).');
-        }
-
-        function loadLatestSession() {
-            const keys = Object.keys(localStorage).filter(k => k.startsWith('atlas_proj_'));
-            if (keys.length > 0) {
-                const latestKey = keys[keys.length - 1];
-                const data = JSON.parse(localStorage.getItem(latestKey));
-                applyLoadedProjectData(data);
-                alert('Última sesión cargada correctamente (Ctrl + Shift + S).');
-            } else {
-                alert('No hay sesiones previas guardadas.');
-            }
-        }
-
-        function confirmSaveProject() {
-            const nameInput = document.getElementById('saveProjectName').value.trim() || 'proyecto_atlas';
-            const projData = {
-                name: nameInput,
-                cols: gridCols,
-                rows: gridRows,
-                cWidth: cellWidth,
-                cHeight: cellHeight,
-                textures: getTextureKeys(),
-                date: lastEditDate,
-                weight: document.getElementById('modalSaveWeight').innerText
-            };
-            localStorage.setItem('atlas_proj_' + nameInput, JSON.stringify(projData));
-            closeSaveModal();
-            alert('Proyecto guardado con éxito.');
-        }
-
-        function confirmLoadProject() {
-            if (!selectedProjectName) return;
-            const data = JSON.parse(localStorage.getItem(selectedProjectName));
-            if (data) {
-                applyLoadedProjectData(data);
-                closeLoadModal();
-                alert('Proyecto cargado con éxito.');
-            }
-        }
-
-        function applyLoadedProjectData(data) {
-            gridCols = data.cols;
-            gridRows = data.rows;
-            cellWidth = data.cWidth;
-            cellHeight = data.cHeight;
-            document.getElementById('gridCols').value = gridCols;
-            document.getElementById('gridRows').value = gridRows;
-            document.getElementById('cellWidth').value = cellWidth;
-            document.getElementById('cellHeight').value = cellHeight;
-            canvas.width = gridCols * cellWidth;
-            canvas.height = gridRows * cellHeight;
-            restoreState(data.textures);
         }
 
         function toggleGrayscale() {
             saveState();
             isGrayscaleActive = !isGrayscaleActive;
-            const btn = document.getElementById('btnGrayscaleToggle');
-            if (isGrayscaleActive) {
-                btn.innerText = "ON";
-                btn.className = "px-3 py-1 text-xs font-bold text-white bg-green-600 rounded border border-black transition";
-            } else {
-                btn.innerText = "OFF";
-                btn.className = "px-3 py-1 text-xs font-bold text-white bg-gray-500 rounded border border-black transition";
-            }
+            setToggleBtn(document.getElementById('btnGrayscaleToggle'), isGrayscaleActive);
             redrawAtlas();
         }
 
         function toggleInvert() {
             saveState();
             isInvertActive = !isInvertActive;
-            const btn = document.getElementById('btnInvertToggle');
-            if (isInvertActive) {
-                btn.innerText = "ON";
-                btn.className = "px-3 py-1 text-xs font-bold text-white bg-green-600 rounded border border-black transition";
-            } else {
-                btn.innerText = "OFF";
-                btn.className = "px-3 py-1 text-xs font-bold text-white bg-gray-500 rounded border border-black transition";
-            }
+            setToggleBtn(document.getElementById('btnInvertToggle'), isInvertActive);
             redrawAtlas();
         }
 
         function toggleSketch() {
             saveState();
             isSketchActive = !isSketchActive;
-            const btn = document.getElementById('btnSketchToggle');
-            if (isSketchActive) {
-                btn.innerText = "ON";
-                btn.className = "px-3 py-1 text-xs font-bold text-white bg-green-600 rounded border border-black transition";
-            } else {
-                btn.innerText = "OFF";
-                btn.className = "px-3 py-1 text-xs font-bold text-white bg-gray-500 rounded border border-black transition";
-            }
+            setToggleBtn(document.getElementById('btnSketchToggle'), isSketchActive);
             redrawAtlas();
         }
 
         function toggleBlur() {
             saveState();
             isBlurActive = !isBlurActive;
-            const btn = document.getElementById('btnBlurToggle');
-            if (isBlurActive) {
-                btn.innerText = "ON";
-                btn.className = "px-3 py-1 text-xs font-bold text-white bg-green-600 rounded border border-black transition";
-            } else {
-                btn.innerText = "OFF";
-                btn.className = "px-3 py-1 text-xs font-bold text-white bg-gray-500 rounded border border-black transition";
-            }
+            setToggleBtn(document.getElementById('btnBlurToggle'), isBlurActive);
             redrawAtlas();
         }
 
         function togglePixel() {
             saveState();
             isPixelActive = !isPixelActive;
-            const btn = document.getElementById('btnPixelToggle');
-            if (isPixelActive) {
-                btn.innerText = "ON";
-                btn.className = "px-3 py-1 text-xs font-bold text-white bg-green-600 rounded border border-black transition";
-            } else {
-                btn.innerText = "OFF";
-                btn.className = "px-3 py-1 text-xs font-bold text-white bg-gray-500 rounded border border-black transition";
-            }
+            setToggleBtn(document.getElementById('btnPixelToggle'), isPixelActive);
             redrawAtlas();
         }
 
@@ -674,6 +743,12 @@
             pixelIntensity = parseInt(value) || 2;
             document.getElementById('pixelIntensityVal').innerText = pixelIntensity;
             if (isPixelActive) redrawAtlas();
+        }
+
+        function setSaturation(value) {
+            saturationValue = parseInt(value) || 100;
+            document.getElementById('saturationVal').innerText = saturationValue + '%';
+            document.getElementById('viewportWrapper').style.filter = `saturate(${saturationValue}%)`;
         }
 
         function applyBlurPixelEffects(targetCanvas, targetCtx, scale) {
@@ -752,6 +827,7 @@
                             img.onload = function() {
                                 saveState();
                                 assignToNextAvailableCell(img);
+                                updateSpaceCounter();
                             };
                             img.src = event.target.result;
                         };
@@ -796,17 +872,24 @@
             for (let r = 0; r < gridRows; r++) {
                 for (let c = 0; c < gridCols; c++) {
                     const key = `${c}-${r}`;
-                    if (!textures[key]) {
+                    if (!textures[key] && !colors[key]) {
                         textures[key] = imgObj;
                         redrawAtlas();
                         updateStats();
+                        renderGridButtons();
                         return;
                     }
                 }
             }
-            textures[`0-0`] = imgObj;
+            const newCols = gridCols + 1;
+            document.getElementById('gridCols').value = newCols;
+            gridCols = newCols;
+            canvas.width = gridCols * cellWidth;
+            canvas.height = gridRows * cellHeight;
+            textures[`${gridCols - 1}-0`] = imgObj;
             redrawAtlas();
             updateStats();
+            renderGridButtons();
         }
 
         function updateGridConfig() {
@@ -820,6 +903,8 @@
 
             redrawAtlas();
             updateStats();
+            renderGridButtons();
+            updateSpaceCounter();
         }
 
         function handleFiles(files) {
@@ -830,6 +915,7 @@
                     const img = new Image();
                     img.onload = function() {
                         assignToNextAvailableCell(img);
+                        updateSpaceCounter();
                     };
                     img.src = e.target.result;
                 };
@@ -841,8 +927,11 @@
         function clearAllTextures() {
             saveState();
             textures = {};
+            colors = {};
             redrawAtlas();
             updateStats();
+            renderGridButtons();
+            updateSpaceCounter();
         }
 
         function drawImageContain(targetCtx, img, cellX, cellY, cWidth, cHeight) {
@@ -880,6 +969,11 @@
                     const x = c * cellWidth;
                     const y = r * cellHeight;
 
+                    if (colors[key]) {
+                        ctx.fillStyle = colors[key];
+                        ctx.fillRect(x, y, cellWidth, cellHeight);
+                    }
+
                     if (textures[key]) {
                         drawImageContain(ctx, textures[key], x, y, cellWidth, cellHeight);
                     }
@@ -888,7 +982,7 @@
                     ctx.lineWidth = 1;
                     ctx.strokeRect(x, y, cellWidth, cellHeight);
 
-                    if (!textures[key]) {
+                    if (!textures[key] && !colors[key]) {
                         ctx.fillStyle = '#71717a';
                         ctx.font = '10px Inter, sans-serif';
                         ctx.fillText(`${c},${r}`, x + 6, y + 16);
@@ -959,6 +1053,92 @@
             }
         }
 
+        function renderGridButtons() {
+            gridOverlay.innerHTML = '';
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = rect.width / canvas.width;
+            const scaleY = rect.height / canvas.height;
+
+            for (let r = 0; r < gridRows; r++) {
+                for (let c = 0; c < gridCols; c++) {
+                    const key = `${c}-${r}`;
+                    const hasContent = !!(textures[key] || colors[key]);
+                    const btn = document.createElement('button');
+                    btn.className = 'grid-cell-btn' + (hasContent ? ' has-content' : '');
+                    btn.style.left = (c * cellWidth * scaleX) + 'px';
+                    btn.style.top = (r * cellHeight * scaleY) + 'px';
+                    btn.style.width = (cellWidth * scaleX) + 'px';
+                    btn.style.height = (cellHeight * scaleY) + 'px';
+                    btn.dataset.col = c;
+                    btn.dataset.row = r;
+                    btn.dataset.key = key;
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        openCellOptions(c, r);
+                    };
+                    gridOverlay.appendChild(btn);
+                }
+            }
+        }
+
+        function openCellOptions(col, row) {
+            selectedCellKey = `${col}-${row}`;
+            const hasContent = !!(textures[selectedCellKey] || colors[selectedCellKey]);
+            document.getElementById('cellOptionsTitle').innerText = `Espacio (${col}, ${row}) — ${hasContent ? 'Ocupado' : 'Vacío'}`;
+            document.getElementById('cellOptionsWin').classList.add('visible');
+        }
+
+        function closeCellOptions() {
+            document.getElementById('cellOptionsWin').classList.remove('visible');
+            selectedCellKey = null;
+        }
+
+        function addTextureToCell() {
+            if (!selectedCellKey) return;
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                saveState();
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        textures[selectedCellKey] = img;
+                        delete colors[selectedCellKey];
+                        redrawAtlas();
+                        updateStats();
+                        renderGridButtons();
+                        updateSpaceCounter();
+                        closeCellOptions();
+                        showToast('Textura agregada al espacio', true);
+                    };
+                    img.src = ev.target.result;
+                };
+                reader.readAsDataURL(file);
+            };
+            input.click();
+        }
+
+        function deleteTextureFromCell() {
+            if (!selectedCellKey) return;
+            if (textures[selectedCellKey] || colors[selectedCellKey]) {
+                saveState();
+                delete textures[selectedCellKey];
+                delete colors[selectedCellKey];
+                redrawAtlas();
+                updateStats();
+                renderGridButtons();
+                updateSpaceCounter();
+                showToast('Textura eliminada del espacio', true);
+            } else {
+                showToast('Este espacio ya está vacío', false);
+            }
+            closeCellOptions();
+        }
+
         canvas.addEventListener('click', (e) => {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
@@ -976,18 +1156,28 @@
                     delete textures[key];
                     redrawAtlas();
                     updateStats();
+                    updateSpaceCounter();
+                    renderGridButtons();
                 }
             }
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target.id === 'filterWin') closeFilterWindow();
+            if (e.target.id === 'shortcutsWin') closeShortcutsWindow();
+            if (e.target.id === 'cellOptionsWin') closeCellOptions();
         });
 
         function zoomCanvas(delta) {
             currentZoom = Math.max(0.2, Math.min(4, currentZoom + delta));
             document.getElementById('viewportWrapper').style.transform = `scale(${currentZoom})`;
+            renderGridButtons();
         }
 
         function resetZoom() {
             currentZoom = 1;
             document.getElementById('viewportWrapper').style.transform = `scale(1)`;
+            renderGridButtons();
         }
 
         function updateStats() {
@@ -998,7 +1188,7 @@
             const finalWidth = gridCols * cellWidth * scale;
             const finalHeight = gridRows * cellHeight * scale;
 
-            const hasTextures = Object.keys(textures).length > 0;
+            const hasTextures = Object.keys(textures).length > 0 || Object.keys(colors).length > 0;
 
             const resEl = document.getElementById('infoResolution');
             const weightEl = document.getElementById('infoWeight');
@@ -1070,11 +1260,17 @@
             for (let r = 0; r < gridRows; r++) {
                 for (let c = 0; c < gridCols; c++) {
                     const key = `${c}-${r}`;
+                    const baseCellW = cellWidth * scale;
+                    const baseCellH = cellHeight * scale;
+                    const x = c * baseCellW;
+                    const y = r * baseCellH;
+
+                    if (colors[key]) {
+                        exportCtx.fillStyle = colors[key];
+                        exportCtx.fillRect(x, y, baseCellW, baseCellH);
+                    }
+
                     if (textures[key]) {
-                        const baseCellW = cellWidth * scale;
-                        const baseCellH = cellHeight * scale;
-                        const x = c * baseCellW;
-                        const y = r * baseCellH;
                         drawImageContain(exportCtx, textures[key], x, y, baseCellW, baseCellH);
                     }
                 }
@@ -1142,12 +1338,31 @@
                 exportCtx.putImageData(expImgData, 0, 0);
             }
 
+            if (saturationValue !== 100) {
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = exportCanvas.width;
+                tempCanvas.height = exportCanvas.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.filter = `saturate(${saturationValue}%)`;
+                tempCtx.drawImage(exportCanvas, 0, 0);
+                exportCtx.clearRect(0, 0, exportCanvas.width, exportCanvas.height);
+                exportCtx.drawImage(tempCanvas, 0, 0);
+            }
+
             const dataUrl = exportCanvas.toDataURL(format, quality);
             const link = document.createElement('a');
             link.download = `texture_atlas.${format.split('/')[1]}`;
             link.href = dataUrl;
             link.click();
         }
+
+        window.addEventListener('resize', () => {
+            renderGridButtons();
+        });
+
+        setTimeout(() => {
+            renderGridButtons();
+        }, 200);
     </script>
 </body>
 </html>
