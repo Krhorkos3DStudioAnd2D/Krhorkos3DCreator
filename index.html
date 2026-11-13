@@ -247,10 +247,10 @@
         .novedades-container {
             display: flex;
             justify-content: center;
+            gap: 10px;
             padding: 10px 0;
         }
 
-        /* ===== VENTANA FLOTANTE ===== */
         .floating-window {
             position: fixed;
             background: var(--bg-panel);
@@ -458,7 +458,8 @@
                     </div>
                 </div>
                 <div class="novedades-container">
-                    <button class="btn-primary-custom" onclick="openNovedades()">📢 NOVEDADES</button>
+                    <button class="btn-primary-custom" onclick="openNovedades3D()">📢 NOVEDADES 3D</button>
+                    <button class="btn-primary-custom" onclick="openNovedadesAtlas()">📢 NOVEDADES ATLAS</button>
                 </div>
             </div>
         </section>
@@ -489,11 +490,10 @@
         <span>Krhorkos 3D & 2D Studio &copy; 2026</span>
     </footer>
 
-    <!-- ===== VENTANA FLOTANTE DE NOVEDADES ===== -->
-    <div id="novedades-window" class="floating-window" style="width: 620px; height: 540px; top: 80px; left: 50%; transform: translateX(-50%);">
+    <div id="novedades-3d-window" class="floating-window" style="width: 620px; height: 540px; top: 80px; left: 50%; transform: translateX(-50%);">
         <div class="fw-header">
-            <span class="fw-title">📢 Novedades</span>
-            <button class="fw-close" onclick="closeNovedades()">✕</button>
+            <span class="fw-title">📢 Novedades del Editor 3D</span>
+            <button class="fw-close" onclick="closeNovedades3D()">✕</button>
         </div>
         <div class="fw-body">
             <article class="novedad-card">
@@ -518,16 +518,58 @@
                 </div>
             </article>
         </div>
-        <div class="fw-resize" onmousedown="startResize(event, 'novedades-window')"></div>
+        <div class="fw-resize" onmousedown="startResize(event, 'novedades-3d-window')"></div>
+    </div>
+
+    <div id="novedades-atlas-window" class="floating-window" style="width: 620px; height: 540px; top: 100px; left: 50%; transform: translateX(-50%);">
+        <div class="fw-header">
+            <span class="fw-title">📢 Novedades del Atlas de Texturas</span>
+            <button class="fw-close" onclick="closeNovedadesAtlas()">✕</button>
+        </div>
+        <div class="fw-body">
+            <article class="novedad-card">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="card-title">NOVEDADES DE LA VERSIÓN 1.8</div>
+                        <div class="card-date">📅 13/11/2026 — 12:20 p.m</div>
+                    </div>
+                    <div class="card-version">Versión 1.8</div>
+                </div>
+                <div class="card-body">
+                    <div class="card-image">
+                        <img src="NOVEDAD_1.8.png" onerror="this.style.display='none'; this.parentElement.style.padding='40px 20px'; this.parentElement.innerHTML='<span style=\'color:#888; font-size:12px;\'>Imagen no disponible</span>';">
+                    </div>
+                    <div class="card-description">1. (INTERFAZ) Se cambió el color principal de azul a naranja
+2. Se eliminaron las funciones de Guardar y Cargar proyecto
+3. Nuevo filtro: Saturación
+4. Las ventanas ahora son redimensionables y comparten el mismo estilo visual del sitio completo
+5. Ahora al arrastrar una imagen directamente al sitio, se crea automáticamente un nuevo espacio disponible
+6. Agregado contador de espacios usados, para ver rápidamente cuántas celdas están ocupadas</div>
+                    <div class="tags-row">
+                        <span class="tag tag-nuevo">Nuevo</span>
+                        <span class="tag tag-mejora">Mejora</span>
+                    </div>
+                </div>
+            </article>
+        </div>
+        <div class="fw-resize" onmousedown="startResize(event, 'novedades-atlas-window')"></div>
     </div>
 
     <script>
-        function openNovedades() {
-            document.getElementById('novedades-window').classList.add('visible');
+        function openNovedades3D() {
+            document.getElementById('novedades-3d-window').classList.add('visible');
         }
 
-        function closeNovedades() {
-            document.getElementById('novedades-window').classList.remove('visible');
+        function closeNovedades3D() {
+            document.getElementById('novedades-3d-window').classList.remove('visible');
+        }
+
+        function openNovedadesAtlas() {
+            document.getElementById('novedades-atlas-window').classList.add('visible');
+        }
+
+        function closeNovedadesAtlas() {
+            document.getElementById('novedades-atlas-window').classList.remove('visible');
         }
 
         function makeDraggable(win) {
@@ -590,7 +632,8 @@
             activeResize = null;
         });
 
-        makeDraggable(document.getElementById('novedades-window'));
+        makeDraggable(document.getElementById('novedades-3d-window'));
+        makeDraggable(document.getElementById('novedades-atlas-window'));
     </script>
 
 </body>
