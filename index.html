@@ -303,10 +303,29 @@
         .floating-window .fw-body {
             padding: 15px;
             flex: 1;
+            min-height: 0;
             overflow-y: auto;
+            overflow-x: hidden;
             display: flex;
             flex-direction: column;
             gap: 12px;
+            scrollbar-width: thin;
+            scrollbar-color: #555555 rgba(0, 0, 0, 0.25);
+        }
+        .floating-window .fw-body::-webkit-scrollbar {
+            width: 8px;
+        }
+        .floating-window .fw-body::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 4px;
+        }
+        .floating-window .fw-body::-webkit-scrollbar-thumb {
+            background: #555555;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+        .floating-window .fw-body::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
         }
         .floating-window .fw-resize {
             position: absolute;
@@ -328,6 +347,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             display: flex;
             flex-direction: column;
+            flex-shrink: 0;
         }
 
         .novedad-card .card-header {
@@ -458,8 +478,8 @@
                     </div>
                 </div>
                 <div class="novedades-container">
-                    <button class="btn-primary-custom" onclick="openNovedades3D()">📢 NOVEDADES 3D</button>
-                    <button class="btn-primary-custom" onclick="openNovedadesAtlas()">📢 NOVEDADES ATLAS</button>
+                    <button class="btn-primary-custom" onclick="openNovedades3D(event)">📢 NOVEDADES 3D</button>
+                    <button class="btn-primary-custom" onclick="openNovedadesAtlas(event)">📢 NOVEDADES ATLAS</button>
                 </div>
             </div>
         </section>
@@ -587,7 +607,8 @@
     </div>
 
     <script>
-        function openNovedades3D() {
+        function openNovedades3D(e) {
+            if (e) e.stopPropagation();
             document.getElementById('novedades-3d-window').classList.add('visible');
         }
 
@@ -595,13 +616,23 @@
             document.getElementById('novedades-3d-window').classList.remove('visible');
         }
 
-        function openNovedadesAtlas() {
+        function openNovedadesAtlas(e) {
+            if (e) e.stopPropagation();
             document.getElementById('novedades-atlas-window').classList.add('visible');
         }
 
         function closeNovedadesAtlas() {
             document.getElementById('novedades-atlas-window').classList.remove('visible');
         }
+
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('button[onclick*="openNovedades"]')) return;
+            document.querySelectorAll('.floating-window.visible').forEach((win) => {
+                if (!win.contains(e.target)) {
+                    win.classList.remove('visible');
+                }
+            });
+        });
 
         function makeDraggable(win) {
             const header = win.querySelector('.fw-header');
